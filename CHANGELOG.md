@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 ...
 
+# [0.2.0] - 2018-07-23
+
+### Added
+
+Added side panel to the model picker in order to display dynamic filters.
+
+
 # [0.1.2] - 2017-08-22
 
 ### Fixed
