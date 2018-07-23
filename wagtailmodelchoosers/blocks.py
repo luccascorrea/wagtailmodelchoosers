@@ -20,6 +20,7 @@ class ModelChooserBlock(ChooserBlock):
         self.label = options.pop('label', chooser)
         self.display = options.pop('display', 'title')
         self.list_display = options.pop('list_display', list(flatten([self.display])))
+        self.has_list_filter = options.pop('list_filter', None) is not None
         self.filters = options.pop('filters', [])
         self.page_size_param = options.pop('page_size_param', None)
         self.page_size = options.pop('page_size', None)
@@ -40,11 +41,13 @@ class ModelChooserBlock(ChooserBlock):
             label=self.label,
             display=self.display,
             list_display=self.list_display,
+            has_list_filter=self.has_list_filter,
             filters=self.filters,
             page_size_param=self.page_size_param,
             page_size=self.page_size,
             pk_name=self.pk_name,
             translations=self.translations,
+            chooser=self.chooser
         )
 
     def get_prep_value(self, value):

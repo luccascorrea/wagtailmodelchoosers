@@ -25,6 +25,8 @@ class TestModelChooserWidget(TestCase):
             'display': 'title',
             'list_display': [{'name': 'title', 'label': 'Title'}],
             'pk_name': 'id',
+            'chooser': 'test_chooser',
+            'has_list_filter': False
         }
 
     def test_get_target_model_string(self):
@@ -52,7 +54,7 @@ class TestModelChooserWidget(TestCase):
     def test_url_builder(self):
         widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
         url = widget.get_endpoint()
-        self.assertEqual(url, '/admin/modelchoosers/api/v1/model/wagtailcore.Page')
+        self.assertEqual(url, '/admin/modelchoosers/api/v1/model/test_chooser')
 
     def test_get_internal_value(self):
         id_ = uuid.uuid4()
@@ -75,7 +77,9 @@ class TestModelChooserWidget(TestCase):
             'initial_display_value': 'Welcome to your new Wagtail site!',
             'display': 'title',
             'list_display': [{'name': 'title', 'label': 'Title'}],
-            'endpoint': '/admin/modelchoosers/api/v1/model/wagtailcore.Page',
+            'has_list_filter': False,
+            'endpoint': '/admin/modelchoosers/api/v1/model/test_chooser',
+            'filters_endpoint': '/admin/modelchoosers/api/v1/filters/test_chooser/',
             'pk_name': 'id',
         }
 
