@@ -29,8 +29,10 @@ const propTypes = {
   translations: PropTypes.object,
   label: PropTypes.string.isRequired,
   list_display: PropTypes.array.isRequired,
+  has_list_filter: PropTypes.bool.isRequired,
   filters: PropTypes.array,
   endpoint: PropTypes.string.isRequired,
+  filters_endpoint: PropTypes.string.isRequired,
   page_size: PropTypes.number,
   page_size_param: PropTypes.string,
 };
@@ -179,8 +181,10 @@ class BaseChooser extends React.Component {
     const { pickerVisible, initialUrl } = this.state;
     const {
       list_display: listDisplay,
+      has_list_filter: hasListFilter,
       label,
       endpoint,
+      filters_endpoint: filtersEndpoint,
       filters,
       pk_name: pkName,
       page_size: pageSize,
@@ -203,6 +207,8 @@ class BaseChooser extends React.Component {
             onSelect={this.onSelect}
             label={label}
             endpoint={endpoint}
+            filters_endpoint={filtersEndpoint}
+            has_list_filter={hasListFilter}
             filters={filters}
             list_display={listDisplay}
             pk_name={pkName}

@@ -15,12 +15,14 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
     is_hidden = True
     template_name = 'wagtailmodelchoosers/widgets/model_chooser.html'
 
-    def __init__(self, target_model, display, list_display, required=True, **kwargs):
+    def __init__(self, target_model, display, list_display, has_list_filter, chooser, required=True, **kwargs):
         self.required = required
         self._target_model = target_model
         self.label = kwargs.pop('label', self.get_class_name()[1])
         self.display = display
         self.list_display = list_display
+        self.has_list_filter = has_list_filter
+        self.chooser = chooser
         self.filters = kwargs.pop('filters', [])
         self.page_size_param = kwargs.pop('page_size_param', None)
         self.page_size = kwargs.pop('page_size', None)
@@ -78,7 +80,13 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
         app, class_name = self.get_class_name()
 
         from django.core.urlresolvers import reverse
-        return reverse('wagtailmodelchoosers_api_model', args=[app, class_name])
+        return reverse('wagtailmodelchoosers_api_model', kwargs={"chooser": self.chooser})
+
+    def get_filters_endpoint(self):
+        app, class_name = self.get_class_name()
+
+        from django.core.urlresolvers import reverse
+        return reverse('wagtailmodelchoosers_api_filters', kwargs={"chooser": self.chooser})
 
     def get_internal_value(self, value):
         if hasattr(value, 'pk'):
@@ -96,6 +104,8 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
             'label': self.label,
             'display': self.display,
             'list_display': self.list_display,
+            'has_list_filter': self.has_list_filter,
+            'filters_endpoint': self.get_filters_endpoint(),
             'pk_name': self.pk_name,
             'required': self.required,
             'initial_display_value': self.get_display_value(value),

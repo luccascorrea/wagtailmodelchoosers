@@ -23,9 +23,11 @@ class BaseModelChooserPanel(BaseChooserPanel):
             cls.field_name: ModelChooserWidget(
                 cls.target_model(),
                 required=cls.get_required(),
+                chooser=cls.chooser,
                 label=cls.label,
                 display=cls.display,
                 list_display=cls.list_display,
+                has_list_filter=cls.has_list_filter,
                 filters=cls.filters,
                 page_size_param=cls.page_size_param,
                 page_size=cls.page_size,
@@ -45,6 +47,7 @@ class ModelChooserPanel(object):
         self.label = options.pop('label', chooser)
         self.display = options.pop('display', 'title')
         self.list_display = options.pop('list_display', list(flatten([self.display])))
+        self.has_list_filter = options.pop('list_filter', None) is not None
         self.filters = options.pop('filters', [])
         self.page_size_param = options.pop('page_size_param', None)
         self.page_size = options.pop('page_size', None)
@@ -55,9 +58,11 @@ class ModelChooserPanel(object):
         return type(str('_ModelChooserPanel'), (BaseModelChooserPanel,), {
             'model': model,
             'field_name': self.field_name,
+            'chooser': self.chooser,
             'label': self.label,
             'display': self.display,
             'list_display': self.list_display,
+            'has_list_filter': self.has_list_filter,
             'filters': self.filters,
             'page_size_param': self.page_size_param,
             'page_size': self.page_size,
