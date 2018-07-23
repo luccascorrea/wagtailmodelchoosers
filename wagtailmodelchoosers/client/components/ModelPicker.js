@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import Button, { CloseButton } from './Buttons';
 import AutoComplete from './AutoComplete';
+import FilterSelector from './FilterSelector';
 import { pluralize, tr } from '../utils';
 
 const MODAL_EXIT_CLASS = 'admin-modal--exit';
@@ -30,7 +31,9 @@ const propTypes = {
   onClose: PropTypes.func.isRequired,
   label: PropTypes.string.isRequired,
   endpoint: PropTypes.string.isRequired,
+  filters_endpoint: PropTypes.string.isRequired,
   list_display: PropTypes.array.isRequired,
+  has_list_filter: PropTypes.bool.isRequired,
   filters: PropTypes.array,
   pk_name: PropTypes.string.isRequired,
   page_size: PropTypes.number,
@@ -57,6 +60,7 @@ class ModelPicker extends React.Component {
       suggestionsCount: 0,
       shouldShowSuggestions: false,
       loadingSuggestions: false,
+      queryString: ""
     };
 
     this.getDefaultUrl = this.getDefaultUrl.bind(this);
@@ -83,6 +87,8 @@ class ModelPicker extends React.Component {
     this.onLoadSuggestions = this.onLoadSuggestions.bind(this);
     this.onValueChange = this.onValueChange.bind(this);
     this.onLoadStart = this.onLoadStart.bind(this);
+    this.getFilters = this.getFilters.bind(this);
+    this.onFilterChanged = this.onFilterChanged.bind(this);
   }
 
   componentDidMount() {
@@ -112,6 +118,14 @@ class ModelPicker extends React.Component {
       suggestionsCount: suggestions.length,
       loadingSuggestions: false,
     });
+  }
+
+  onFilterChanged(newQueryString) {
+    this.setState({
+      queryString: newQueryString
+    }, () => {
+      this.navigate(this.getDefaultUrl());
+    })
   }
 
   onValueChange(newValue) {
@@ -243,15 +257,28 @@ class ModelPicker extends React.Component {
     return (
       <tr className="chooser__item">
         <td colSpan={listDisplay.length} className="chooser__cell chooser__cell--disabled">
-          {loading ? 'Loading' : 'Sorry, no results'}
+          {loading ? 'Loading...' : 'Sorry, no results'}
         </td>
       </tr>
     );
   }
 
+  getFilters() {
+    const { filters_endpoint: filtersEndpoint, has_list_filter: hasListFilter } = this.props;
+
+    if (!hasListFilter) {
+      return (null);
+    }
+
+    return (
+      <div className="admin-modal__filters">
+        <FilterSelector onFilterChanged={this.onFilterChanged} filters_endpoint={filtersEndpoint}/>
+      </div>
+    );
+  }
+
   getModels() {
     const { shouldShowSuggestions, suggestions, models } = this.state;
-
     return shouldShowSuggestions ? suggestions : models;
   }
 
@@ -360,6 +387,10 @@ class ModelPicker extends React.Component {
       });
     }
 
+    if (this.state.queryString) {
+      localUrl += `&${this.state.queryString}`;
+    }
+
     return localUrl;
   }
 
@@ -412,6 +443,7 @@ class ModelPicker extends React.Component {
                 onLoadStart={this.onLoadStart}
                 endpoint={endpoint}
                 filter={this.addFilterParams('')}
+                ref={(autoComplete) => { this.autoCompleteRef = autoComplete; }}
               />
             </div>
             <div className="admin-modal__action">
@@ -420,8 +452,11 @@ class ModelPicker extends React.Component {
               {this.getPaginationButtons()}
             </div>
           </div>
-          <div className="admin-modal__content" ref={(content) => { this.contentRef = content; }}>
-            {this.getTable()}
+          <div className="admin-modal__content_wrapper">
+            <div className="admin-modal__content" ref={(content) => { this.contentRef = content; }}>
+              {this.getTable()}
+            </div>
+            {this.getFilters()}
           </div>
         </div>
       </div>

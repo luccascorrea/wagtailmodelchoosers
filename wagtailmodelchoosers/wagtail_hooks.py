@@ -4,7 +4,7 @@ from django.utils.html import format_html, format_html_join
 
 from wagtail.wagtailcore import hooks
 
-from wagtailmodelchoosers.views import ModelView, RemoteResourceView
+from wagtailmodelchoosers.views import ModelView, RemoteResourceView, FilterView
 
 
 @hooks.register('insert_editor_css')
@@ -33,9 +33,14 @@ def wagtailmodelchoosers_admin_js():
 def wagtailmodelchoosers_admin_urls():
     return [
         url(
-            r'^modelchoosers/api/v1/model/(?P<app_name>[\w-]+).(?P<model_name>\w+)',
+            r'^modelchoosers/api/v1/model/(?P<chooser>[\w-]+)',
             ModelView.as_view({'get': 'list'}),
             name='wagtailmodelchoosers_api_model'
+        ),
+        url(
+            r'^modelchoosers/api/v1/filters/(?P<chooser>[\w-]+)/',
+            FilterView.as_view(),
+            name='wagtailmodelchoosers_api_filters'
         ),
         url(
             r'^modelchoosers/api/v1/remote_model/(?P<chooser>[\w-]+)',

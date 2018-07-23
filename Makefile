@@ -36,5 +36,8 @@ update-test-fixture: ## Update test fixture from the db.
 dist: ## Compile the JS and CSS for release.
 	npm run dist
 
+install:
+	npm run dist && pip uninstall -y wagtailmodelchoosers && python setup.py sdist && pip install `ls -td dist/* | head -1`
+
 publish: dist ## Publishes a new version to pypi.
 	rm dist/* && python setup.py sdist && twine upload dist/* && echo 'Success! Go to https://pypi.python.org/pypi/wagtailmodelchoosers and check that all is well.'

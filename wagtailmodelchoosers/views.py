@@ -1,12 +1,16 @@
 import requests
 from django.apps import apps
-from django.db.models import CharField, Q
+from django.conf import settings
+from django.db.models import CharField, BooleanField, TextField, Q
+from django.db.models.fields.related import (ManyToManyRel, OneToOneRel, RelatedField)
 from rest_framework import filters, serializers
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
 from rest_framework.mixins import ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ViewSet
+from rest_framework.views import APIView
+
 
 from wagtailmodelchoosers.paginators import GenericModelPaginator
 from wagtailmodelchoosers.utils import (
@@ -14,6 +18,43 @@ from wagtailmodelchoosers.utils import (
     get_query_keys_map,
     get_response_keys_map,
 )
+
+class FilterView(APIView):
+    def get(self, *args, **kwargs):
+        chooser = kwargs["chooser"]
+        options = get_chooser_options(chooser)
+        list_filter = options.get("list_filter")
+        if not list_filter:
+            return Response({})
+
+        app_model = settings.MODEL_CHOOSERS_OPTIONS[chooser]["content_type"]
+        model_class = apps.get_model(app_model)
+
+        response = []
+        for item in list_filter:
+
+            field = item["name"]
+            field = model_class._meta.get_field(field)
+            if isinstance(field, RelatedField):
+                instances = field.related_model.objects.all()
+                options = [{"label": str(option), "value": option.id} for option in instances]
+                item["options"] = [{"label": "All", "value": None, "selected": True}] + options
+                response.append(item)
+            elif isinstance(field, BooleanField):
+                options = [
+                    {"label": "All", "value": None, "selected": True},
+                    {"label": "Yes", "value": "True"},
+                    {"label": "No", "value": "False"}
+                ]
+                item["options"] = options
+                response.append(item)
+            elif hasattr(field, "choices"):
+                options = [{"label": option[1], "value": option[0]} for option in field.choices]
+                item["options"] = [{"label": "All", "value": None, "selected": True}] + options
+                response.append(item)
+
+        return Response(response)
+
 
 
 class ModelView(ListModelMixin, GenericViewSet):
@@ -32,7 +73,7 @@ class ModelView(ListModelMixin, GenericViewSet):
 
         queries = []
         for field in cls._meta.get_fields():
-            if isinstance(field, CharField):
+            if isinstance(field, CharField) or isinstance(field, TextField):
                 kwargs = {}
                 param_name = '%s__icontains' % field.name
                 kwargs[param_name] = search
@@ -49,7 +90,14 @@ class ModelView(ListModelMixin, GenericViewSet):
             return queryset
 
     def do_filter(self, cls, queryset):
-        for field in getattr(cls, 'rest_framework_filter_fields', []):
+        params = self.get_params()
+        chooser = params["chooser"]
+        options = get_chooser_options(chooser)
+
+        rest_framework_filter_fields = getattr(cls, 'rest_framework_filter_fields', [])
+        filter_fields = [item["name"] for item in options.get("list_filter", [])]
+
+        for field in rest_framework_filter_fields + filter_fields:
             value = self.request.query_params.get(field, None)
             if value is not None:
                 kwargs = {}
@@ -61,9 +109,9 @@ class ModelView(ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         params = self.get_params()
-        app_name = params.get('app_name')
-        model_name = params.get('model_name')
-        cls = apps.get_model(app_name, model_name)
+        chooser = params["chooser"]
+        options = get_chooser_options(chooser)
+        cls = apps.get_model(options["content_type"])
 
         queryset = cls.objects.all()
         queryset = self.do_search(cls, queryset)
@@ -73,10 +121,13 @@ class ModelView(ListModelMixin, GenericViewSet):
 
     def get_serializer_class(self):
         params = self.get_params()
-        app_name = params.get('app_name')
-        model_name = params.get('model_name')
+        chooser = params["chooser"]
+        options = get_chooser_options(chooser)
+        content_type = options["content_type"]
 
-        cls = apps.get_model(app_name, model_name)
+        cls = apps.get_model(content_type)
+        app_name, model_name = content_type.split(".")
+
         return self.build_serializer(cls, model_name)
 
     def build_serializer(self, cls, model_name):
@@ -84,7 +135,15 @@ class ModelView(ListModelMixin, GenericViewSet):
         Dynamically build a model serializer class
         """
         class_name = "%sSerializer" % model_name
-        meta_class = type('Meta', (), {'model': cls, 'fields': '__all__'})
+        params = self.get_params()
+        chooser = params["chooser"]
+        options = get_chooser_options(chooser)
+        fields = [field.name for field in cls._meta.fields]
+        for display_field in options["list_display"]:
+            if display_field["name"] not in set(fields):
+                fields.append(display_field["name"])
+
+        meta_class = type('Meta', (), {'model': cls, 'fields': fields})
         serializer_args = {'Meta': meta_class}
 
         if hasattr(cls, 'content_type'):
