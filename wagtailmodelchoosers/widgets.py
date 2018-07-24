@@ -24,6 +24,7 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
         self.has_list_filter = has_list_filter
         self.chooser = chooser
         self.filters = kwargs.pop('filters', [])
+        self.thumbnail = kwargs.pop('thumbnail', None)
         self.page_size_param = kwargs.pop('page_size_param', None)
         self.page_size = kwargs.pop('page_size', None)
         self.pk_name = kwargs.pop('pk_name', 'uuid')
@@ -106,9 +107,11 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
             'list_display': self.list_display,
             'has_list_filter': self.has_list_filter,
             'filters_endpoint': self.get_filters_endpoint(),
+            'thumbnail': self.thumbnail,
             'pk_name': self.pk_name,
             'required': self.required,
             'initial_display_value': self.get_display_value(value),
+            'initial_thumbnail': self.get_thumbnail(value),
             'endpoint': self.get_endpoint(),
         }
 
@@ -130,6 +133,11 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
 
     def get_display_value(self, instance):
         return first_non_empty(instance, self.display, default='')
+
+    def get_thumbnail(self, instance):
+        if instance:
+            return getattr(instance, self.thumbnail) if self.thumbnail else None
+        return None
 
     def render_html(self, name, value, attrs):
         if not isinstance(value, self.target_model):
