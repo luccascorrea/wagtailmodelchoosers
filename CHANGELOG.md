@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 ...
 
+# [0.3.0] - 2018-07-24
+
+### Added
+
+Added option to allow displaying a thumbnail along with chooser and picker.
+
+
 # [0.2.0] - 2018-07-23
 
 ### Added

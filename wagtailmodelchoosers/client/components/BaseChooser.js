@@ -25,6 +25,8 @@ const propTypes = {
   initial_display_value: PropTypes.string.isRequired,
   required: PropTypes.bool.isRequired,
   display: PropTypes.oneOfType([PropTypes.string, PropTypes.array]).isRequired,
+  thumbnail: PropTypes.string,
+  initial_thumbnail: PropTypes.string,
   pk_name: PropTypes.string,
   translations: PropTypes.object,
   label: PropTypes.string.isRequired,
@@ -42,7 +44,7 @@ class BaseChooser extends React.Component {
   constructor(props) {
     super(props);
 
-    const { display, initialValue, initial_display_value: initialDisplayValue } = this.props;
+    const { display, initialValue, initial_display_value: initialDisplayValue, thumbnail, initial_thumbnail: initialThumbnail } = this.props;
 
     // If `initialValue` is an object (i.e. the item), use it directly,
     // otherwise create a new object and use the `initialValue` for the ID.
@@ -54,6 +56,10 @@ class BaseChooser extends React.Component {
     const displayKey = Array.isArray(display) ? display[0] : display;
     if (!(displayKey in selectedItem)) {
       selectedItem[displayKey] = initialDisplayValue;
+    }
+
+    if (!!thumbnail && !(thumbnail in selectedItem)) {
+      selectedItem[thumbnail] = initialThumbnail;
     }
 
     this.state = {
@@ -70,6 +76,7 @@ class BaseChooser extends React.Component {
     this.getItemPreview = this.getItemPreview.bind(this);
     this.isOptional = this.isOptional.bind(this);
     this.getChooseButtons = this.getChooseButtons.bind(this);
+    this.getThumbnail = this.getThumbnail.bind(this);
     this.clearPicker = this.clearPicker.bind(this);
   }
 
@@ -153,6 +160,21 @@ class BaseChooser extends React.Component {
     );
   }
 
+  getThumbnail() {
+    const { thumbnail } = this.props;
+    const { selectedItem } = this.state;
+
+    if (!selectedItem) {
+      return (null);
+    }
+
+    if (!!thumbnail && !!selectedItem[thumbnail]) {
+      return (<img className="model-chooser__thumb" src={selectedItem[thumbnail]}/>);
+    }
+
+    return (null);
+  }
+
   isOptional() {
     const { required } = this.props;
     return !required;
@@ -182,6 +204,7 @@ class BaseChooser extends React.Component {
     const {
       list_display: listDisplay,
       has_list_filter: hasListFilter,
+      thumbnail,
       label,
       endpoint,
       filters_endpoint: filtersEndpoint,
@@ -194,7 +217,8 @@ class BaseChooser extends React.Component {
 
     return (
       <div>
-        <div>
+        <div className="model-chooser__container">
+          {this.getThumbnail()}
           <span className="model-chooser__label">
             {this.getItemPreview()}
           </span>
@@ -209,6 +233,7 @@ class BaseChooser extends React.Component {
             endpoint={endpoint}
             filters_endpoint={filtersEndpoint}
             has_list_filter={hasListFilter}
+            thumbnail={thumbnail}
             filters={filters}
             list_display={listDisplay}
             pk_name={pkName}

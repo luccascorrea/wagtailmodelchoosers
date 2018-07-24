@@ -243,11 +243,10 @@
 .model-chooser__label:not(:empty) {
     margin-right: .5rem;
     display: inline-block;
-
+    flex-grow: 1;
 }
 
 .model-chooser__label:not(:empty) {
-    width: calc(100% - 90px);
     text-overflow: ellipsis;
     overflow: hidden;
 }
@@ -257,6 +256,16 @@
     vertical-align: top;
 }
 
+.model-chooser__container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.model-chooser__thumb {
+    height: 100px;
+    padding: 20px;
+}
 
 .button--disabled {
     pointer-events: none;

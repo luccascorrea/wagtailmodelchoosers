@@ -138,10 +138,17 @@ class ModelView(ListModelMixin, GenericViewSet):
         params = self.get_params()
         chooser = params["chooser"]
         options = get_chooser_options(chooser)
+        thumbnail_field = options.get("thumbnail")
         fields = [field.name for field in cls._meta.fields]
+        fields_set = set(fields)
+
         for display_field in options["list_display"]:
-            if display_field["name"] not in set(fields):
+            if display_field["name"] not in fields_set:
                 fields.append(display_field["name"])
+
+        fields_set = set(fields)
+        if thumbnail_field and thumbnail_field not in fields_set:
+            fields.append(thumbnail_field)
 
         meta_class = type('Meta', (), {'model': cls, 'fields': fields})
         serializer_args = {'Meta': meta_class}

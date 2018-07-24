@@ -39,6 +39,7 @@ const propTypes = {
   page_size: PropTypes.number,
   page_size_param: PropTypes.string,
   translations: PropTypes.object,
+  thumbnail: PropTypes.string,
 };
 
 class ModelPicker extends React.Component {
@@ -329,8 +330,12 @@ class ModelPicker extends React.Component {
   // eslint-disable-next-line
   parseValue(value, fieldName) {
     const type = typeof value;
+    const { thumbnail } = this.props;
 
     if (type === 'string') {
+      if (fieldName === thumbnail && !!value) {
+        return (<img src={value} className="model-chooser__thumb"/>);
+      }
       return value;
     }
 
