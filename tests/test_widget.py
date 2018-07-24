@@ -75,6 +75,8 @@ class TestModelChooserWidget(TestCase):
             'label': 'Page',
             'required': True,
             'initial_display_value': 'Welcome to your new Wagtail site!',
+            'initial_thumbnail': None,
+            'thumbnail': None,
             'display': 'title',
             'list_display': [{'name': 'title', 'label': 'Title'}],
             'has_list_filter': False,
