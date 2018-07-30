@@ -15,6 +15,7 @@ class FilterSelector extends React.Component {
     this.loadFilters = this.loadFilters.bind(this);
     this.selectOption = this.selectOption.bind(this);
     this.getFilterParams = this.getFilterParams.bind(this);
+    this.getCurrentFilterType = this.getCurrentFilterType.bind(this);
   }
 
   componentDidMount() {
@@ -22,12 +23,23 @@ class FilterSelector extends React.Component {
   }
 
   loadFilters() {
+    const { adjustable_filter_type } = this.props;
     const { filters_endpoint: url } = this.props;
     fetch(url, {
       credentials: 'same-origin',
     })
       .then(res => res.json())
       .then((json) => {
+        if (adjustable_filter_type) {
+          json.unshift({
+            "label": "filter type",
+            "name": "filter_type",
+            "options": [
+              {"label": "Exclusive", value: "exclusive", "selected": true},
+              {"label": "Additive", value: "additive", "selected": false}
+            ]
+          })
+        }
         this.setState({
           filterGroups: json,
           loading: false,
@@ -35,13 +47,24 @@ class FilterSelector extends React.Component {
       });
   };
 
+  getCurrentFilterType() {
+    const filterGroup = this.state.filterGroups.find((filterGroup) => filterGroup.name === "filter_type");
+    if (!!filterGroup) {
+      return filterGroup.options.find((option) => option.selected).value;
+    }
+    return "exclusive";
+  }
+
   selectOption(selectedFilterGroup, selectedOption) {
+    const currentFilterType = this.getCurrentFilterType();
+
     const newFilterGroup = Object.assign({}, selectedFilterGroup);
     const newOptions = newFilterGroup.options.map((option) => {
       const newOption = Object.assign({}, option);
       if (option.value === selectedOption.value) {
         newOption.selected = true;
-      } else {
+      } else if (
+        currentFilterType === "exclusive" || !selectedOption.value || !option.value || selectedFilterGroup.name === "filter_type") {
         newOption.selected = false;
       }
       return newOption;
@@ -67,13 +90,15 @@ class FilterSelector extends React.Component {
   getFilterParams() {
     let queryString = "";
     this.state.filterGroups.map((filterGroup) => {
-      const selectedOption = filterGroup.options.find((option) => option.selected);
-      if (!!selectedOption.value) {
-        if (queryString.length > 0) {
-          queryString += "&"
+      const selectedOptions = filterGroup.options.filter((option) => option.selected);
+      selectedOptions.map((selectedOption) => {
+        if (!!selectedOption.value) {
+          if (queryString.length > 0) {
+            queryString += "&"
+          }
+          queryString += encodeURIComponent(filterGroup.name) + "=" + selectedOption.value;
         }
-        queryString += encodeURIComponent(filterGroup.name) + "=" + selectedOption.value;
-      }
+      });
     });
 
     return queryString;
@@ -107,9 +132,11 @@ class FilterSelector extends React.Component {
       if (filterGroups.length === 0) {
         return (null);
       }
+
       content = filterGroups.map((filterGroup) => {
         return this.getFilterGroup(filterGroup);
       });
+
     }
 
 
@@ -128,7 +155,9 @@ FilterSelector.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
   onFilterChanged: PropTypes.func.isRequired,
 //   // eslint-disable-next-line react/forbid-prop-types
-//   input: PropTypes.object.isRequired,
+  adjustable_filter_type: PropTypes.bool.isRequired,
+  filters_endpoint: PropTypes.string.isRequired,
+
 };
 
 export default FilterSelector;

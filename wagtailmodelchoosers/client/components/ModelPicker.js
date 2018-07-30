@@ -34,6 +34,7 @@ const propTypes = {
   filters_endpoint: PropTypes.string.isRequired,
   list_display: PropTypes.array.isRequired,
   has_list_filter: PropTypes.bool.isRequired,
+  adjustable_filter_type: PropTypes.bool.isRequired,
   filters: PropTypes.array,
   pk_name: PropTypes.string.isRequired,
   page_size: PropTypes.number,
@@ -265,7 +266,7 @@ class ModelPicker extends React.Component {
   }
 
   getFilters() {
-    const { filters_endpoint: filtersEndpoint, has_list_filter: hasListFilter } = this.props;
+    const { filters_endpoint: filtersEndpoint, has_list_filter: hasListFilter, adjustable_filter_type: adjustableFilterType } = this.props;
 
     if (!hasListFilter) {
       return (null);
@@ -273,7 +274,7 @@ class ModelPicker extends React.Component {
 
     return (
       <div className="admin-modal__filters">
-        <FilterSelector onFilterChanged={this.onFilterChanged} filters_endpoint={filtersEndpoint}/>
+        <FilterSelector onFilterChanged={this.onFilterChanged} filters_endpoint={filtersEndpoint} adjustable_filter_type={adjustableFilterType} />
       </div>
     );
   }
