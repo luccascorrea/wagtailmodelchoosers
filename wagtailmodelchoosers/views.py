@@ -10,7 +10,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ViewSet
 from rest_framework.views import APIView
-
+import operator
+from functools import reduce
 
 from wagtailmodelchoosers.paginators import GenericModelPaginator
 from wagtailmodelchoosers.utils import (
@@ -97,13 +98,18 @@ class ModelView(ListModelMixin, GenericViewSet):
         rest_framework_filter_fields = getattr(cls, 'rest_framework_filter_fields', [])
         filter_fields = [item["name"] for item in options.get("list_filter", [])]
 
+        filter_type = self.request.query_params.get("filter_type", "exclusive")
+        filter_operator = operator.and_ if filter_type == "exclusive" else operator.or_
+        filter_params = []
         for field in rest_framework_filter_fields + filter_fields:
-            value = self.request.query_params.get(field, None)
-            if value is not None:
+            value = self.request.query_params.getlist(field, [])
+            for sub_val in value:
                 kwargs = {}
                 param_name = '%s' % field
-                kwargs[param_name] = value
-                queryset = queryset.filter(**kwargs)
+                kwargs[param_name] = sub_val
+                filter_params.append(kwargs)
+        if filter_params:
+            queryset = queryset.filter(reduce(filter_operator, [Q(**kwargs) for kwargs in filter_params]))
 
         return queryset
 

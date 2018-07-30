@@ -15,13 +15,14 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
     is_hidden = True
     template_name = 'wagtailmodelchoosers/widgets/model_chooser.html'
 
-    def __init__(self, target_model, display, list_display, has_list_filter, chooser, required=True, **kwargs):
+    def __init__(self, target_model, display, list_display, has_list_filter, adjustable_filter_type, chooser, required=True, **kwargs):
         self.required = required
         self._target_model = target_model
         self.label = kwargs.pop('label', self.get_class_name()[1])
         self.display = display
         self.list_display = list_display
         self.has_list_filter = has_list_filter
+        self.adjustable_filter_type = adjustable_filter_type
         self.chooser = chooser
         self.filters = kwargs.pop('filters', [])
         self.thumbnail = kwargs.pop('thumbnail', None)
@@ -106,6 +107,7 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
             'display': self.display,
             'list_display': self.list_display,
             'has_list_filter': self.has_list_filter,
+            'adjustable_filter_type': self.adjustable_filter_type,
             'filters_endpoint': self.get_filters_endpoint(),
             'thumbnail': self.thumbnail,
             'pk_name': self.pk_name,

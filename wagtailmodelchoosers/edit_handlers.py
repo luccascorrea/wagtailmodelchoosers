@@ -28,6 +28,7 @@ class BaseModelChooserPanel(BaseChooserPanel):
                 display=cls.display,
                 list_display=cls.list_display,
                 has_list_filter=cls.has_list_filter,
+                adjustable_filter_type=cls.adjustable_filter_type,
                 filters=cls.filters,
                 page_size_param=cls.page_size_param,
                 page_size=cls.page_size,
@@ -48,6 +49,7 @@ class ModelChooserPanel(object):
         self.label = options.pop('label', chooser)
         self.display = options.pop('display', 'title')
         self.list_display = options.pop('list_display', list(flatten([self.display])))
+        self.adjustable_filter_type = options.pop('adjustable_filter_type', False)
         self.has_list_filter = options.pop('list_filter', None) is not None
         self.thumbnail = options.pop('thumbnail', None)
         self.filters = options.pop('filters', [])
@@ -65,6 +67,7 @@ class ModelChooserPanel(object):
             'display': self.display,
             'list_display': self.list_display,
             'has_list_filter': self.has_list_filter,
+            'adjustable_filter_type': self.adjustable_filter_type,
             'thumbnail': self.thumbnail,
             'filters': self.filters,
             'page_size_param': self.page_size_param,

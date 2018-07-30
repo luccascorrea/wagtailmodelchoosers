@@ -26,7 +26,8 @@ class TestModelChooserWidget(TestCase):
             'list_display': [{'name': 'title', 'label': 'Title'}],
             'pk_name': 'id',
             'chooser': 'test_chooser',
-            'has_list_filter': False
+            'has_list_filter': False,
+            'adjustable_filter_type': False
         }
 
     def test_get_target_model_string(self):
@@ -80,6 +81,7 @@ class TestModelChooserWidget(TestCase):
             'display': 'title',
             'list_display': [{'name': 'title', 'label': 'Title'}],
             'has_list_filter': False,
+            'adjustable_filter_type': False,
             'endpoint': '/admin/modelchoosers/api/v1/model/test_chooser',
             'filters_endpoint': '/admin/modelchoosers/api/v1/filters/test_chooser/',
             'pk_name': 'id',

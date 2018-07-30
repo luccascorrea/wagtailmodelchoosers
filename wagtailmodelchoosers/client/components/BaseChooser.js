@@ -32,6 +32,7 @@ const propTypes = {
   label: PropTypes.string.isRequired,
   list_display: PropTypes.array.isRequired,
   has_list_filter: PropTypes.bool.isRequired,
+  adjustable_filter_type: PropTypes.bool.isRequired,
   filters: PropTypes.array,
   endpoint: PropTypes.string.isRequired,
   filters_endpoint: PropTypes.string.isRequired,
@@ -208,6 +209,7 @@ class BaseChooser extends React.Component {
       label,
       endpoint,
       filters_endpoint: filtersEndpoint,
+      adjustable_filter_type,
       filters,
       pk_name: pkName,
       page_size: pageSize,
@@ -239,6 +241,7 @@ class BaseChooser extends React.Component {
             pk_name={pkName}
             page_size={pageSize}
             page_size_param={pageSizeParam}
+            adjustable_filter_type={adjustable_filter_type}
             translations={translations}
           />
         ) : null}

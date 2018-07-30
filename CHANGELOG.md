@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 ...
 
+# [0.4.0] - 2018-07-30
+
+### Added
+
+Added option to allow alternating between additive/exclusive filters.
+
+
 # [0.3.0] - 2018-07-24
 
 ### Added
