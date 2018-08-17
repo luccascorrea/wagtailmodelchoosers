@@ -5,7 +5,8 @@ from django.apps import apps
 from django.forms import widgets
 from django.template.loader import render_to_string
 from django.utils.functional import cached_property
-
+from django.core.urlresolvers import reverse
+from django.urls.exceptions import NoReverseMatch
 from wagtail.utils.widgets import WidgetWithScript
 
 from .utils import first_non_empty
@@ -81,8 +82,14 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
     def get_endpoint(self):
         app, class_name = self.get_class_name()
 
-        from django.core.urlresolvers import reverse
         return reverse('wagtailmodelchoosers_api_model', kwargs={"chooser": self.chooser})
+
+    def get_edit_endpoint(self):
+        try:
+            app, class_name = self.get_class_name()
+            return reverse('%s_%s_modeladmin_%s' % (app, class_name.lower(), "edit"), kwargs={"instance_pk": 0})
+        except NoReverseMatch:
+            return None
 
     def get_filters_endpoint(self):
         app, class_name = self.get_class_name()
@@ -108,6 +115,7 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
             'list_display': self.list_display,
             'has_list_filter': self.has_list_filter,
             'adjustable_filter_type': self.adjustable_filter_type,
+            'edit_endpoint': self.get_edit_endpoint(),
             'filters_endpoint': self.get_filters_endpoint(),
             'thumbnail': self.thumbnail,
             'pk_name': self.pk_name,

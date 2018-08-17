@@ -83,6 +83,7 @@ class TestModelChooserWidget(TestCase):
             'has_list_filter': False,
             'adjustable_filter_type': False,
             'endpoint': '/admin/modelchoosers/api/v1/model/test_chooser',
+            'edit_endpoint': None,
             'filters_endpoint': '/admin/modelchoosers/api/v1/filters/test_chooser/',
             'pk_name': 'id',
         }
