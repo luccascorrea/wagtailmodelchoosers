@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 ...
 
+# [0.4.1] - 2018-08-17
+
+### Added
+
+Added button for editing related model.
+
 # [0.4.0] - 2018-07-30
 
 ### Added
