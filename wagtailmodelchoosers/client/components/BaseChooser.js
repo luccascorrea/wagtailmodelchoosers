@@ -35,6 +35,7 @@ const propTypes = {
   adjustable_filter_type: PropTypes.bool.isRequired,
   filters: PropTypes.array,
   endpoint: PropTypes.string.isRequired,
+  edit_endpoint: PropTypes.string.isRequired,
   filters_endpoint: PropTypes.string.isRequired,
   page_size: PropTypes.number,
   page_size_param: PropTypes.string,
@@ -79,6 +80,12 @@ class BaseChooser extends React.Component {
     this.getChooseButtons = this.getChooseButtons.bind(this);
     this.getThumbnail = this.getThumbnail.bind(this);
     this.clearPicker = this.clearPicker.bind(this);
+    this.onEdit = this.onEdit.bind(this);
+  }
+
+  onEdit() {
+    const { edit_endpoint } = this.props;
+    window.open(edit_endpoint.replace("/0/", "/" + this.state.selectedId + "/"), '_blank');
   }
 
   onClose() {
@@ -133,7 +140,7 @@ class BaseChooser extends React.Component {
   }
 
   getChooseButtons() {
-    const { translations } = this.props;
+    const { translations, edit_endpoint } = this.props;
     const { selectedId } = this.state;
 
     if (!selectedId) {
@@ -151,6 +158,14 @@ class BaseChooser extends React.Component {
           onClick={this.showPicker}
           label={tr(STR, translations, 'choose_again')}
         />
+        {}
+        {!!edit_endpoint ? (
+          <SecondaryButton
+            onClick={this.onEdit}
+            label="Edit"
+          />
+        ) : null}
+
         {this.isOptional() ? (
           <SecondaryButton
             onClick={this.clearPicker}
