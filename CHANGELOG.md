@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 ...
 
+# [0.4.2] - 2018-08-20
+
+### Added
+
+Added custom inline panel that makes viewing revisions possible.
+
 # [0.4.1] - 2018-08-17
 
 ### Added
