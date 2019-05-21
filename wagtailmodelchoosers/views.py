@@ -119,7 +119,8 @@ class ModelView(ListModelMixin, GenericViewSet):
         options = get_chooser_options(chooser)
         cls = apps.get_model(options["content_type"])
 
-        queryset = cls.objects.all()
+        queryset_manager_method = options.get("queryset_manager_method", "all")
+        queryset = getattr(cls.objects, queryset_manager_method)()
         queryset = self.do_search(cls, queryset)
         queryset = self.do_filter(cls, queryset)
 
