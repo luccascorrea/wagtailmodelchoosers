@@ -1,55 +1,42 @@
+from wagtail.admin.edit_handlers import BaseChooserPanel
 from wagtail.utils.decorators import cached_classmethod
-from wagtail.wagtailadmin.edit_handlers import BaseChooserPanel
 
 from wagtailmodelchoosers.utils import flatten, get_chooser_options
 from wagtailmodelchoosers.widgets import ModelChooserWidget, RemoteModelChooserWidget
-from wagtail.wagtailadmin.compare import M2MFieldComparison, FieldComparison, ChildRelationComparison
-from wagtail.wagtailadmin.edit_handlers import InlinePanel, BaseInlinePanel
-from wagtail.wagtailadmin import compare
+from wagtail.admin.compare import M2MFieldComparison, FieldComparison, ChildRelationComparison
+from wagtail.admin.edit_handlers import InlinePanel
+from wagtail.admin import compare
 from django.utils.functional import curry
 from django.utils.html import escape
 from django.db import models
 import collections
 
-class BaseInlineModelPanel(BaseInlinePanel):
+class InlineModelPanel(InlinePanel):
 
-    @classmethod
-    def get_comparison(cls):
-        if cls.is_relation:
-            field = cls.model._meta.get_field(cls.relation_name.replace("_set", ""))
-            field.verbose_name = cls.heading
+    def get_comparison(self):
+        if self.is_relation:
+            field = self.model._meta.get_field(self.relation_name.replace("_set", ""))
+            field.verbose_name = self.heading
         else:
-            field = cls.model._meta.get_field(cls.relation_name)
+            field = self.model._meta.get_field(self.relation_name)
 
         field_comparisons = []
 
-        for panel in cls.get_panel_definitions():
-            field_comparisons.extend(panel.bind_to_model(cls.related.related_model).get_comparison())
+        for panel in self.get_panel_definitions():
+            field_comparisons.extend(panel.bind_to_model(self.db_field.related_model).get_comparison())
 
         return [curry(ChildModelComparison, field, field_comparisons)]
 
-class InlineModelPanel(InlinePanel):
-
-    def bind_to_model(self, model):
+    def on_model_bound(self):
+        # super().on_model_bound()
         try:
-            related = getattr(model, self.relation_name).rel
+            related = getattr(self.model, self.relation_name).rel
         except AttributeError:
-            related = getattr(model, self.relation_name + "_set").rel
+            related = getattr(self.model, self.relation_name + "_set").rel
             related.related_name = self.relation_name + "_set"
-        return type(str('_InlinePanel'), (BaseInlineModelPanel,), {
-            'model': model,
-            'relation_name': self.relation_name,
-            'related': related,
-            'is_relation': True,
-            'panels': self.panels,
-            'heading': self.label,
-            'help_text': self.help_text,
-            # TODO: can we pick this out of the foreign key definition as an alternative?
-            # (with a bit of help from the inlineformset object, as we do for label/heading)
-            'min_num': self.min_num,
-            'max_num': self.max_num,
-            'classname': self.classname,
-        })
+
+        self.db_field = related
+
 
 class ChildModelComparison(ChildRelationComparison):
 
@@ -92,46 +79,10 @@ class ModelComparison(M2MFieldComparison):
                 return escape(self.get_item_display(items_a))
             else:
                 return compare.TextDiff([('deletion', self.get_item_display(items_a)), ('addition', self.get_item_display(items_b))]).to_html()
-
-class BaseModelChooserPanel(BaseChooserPanel):
+class ModelChooserPanel(BaseChooserPanel):
     object_type_name = 'model'
 
-    @classmethod
-    def get_comparison_class(cls):
-        return ModelComparison
 
-    @cached_classmethod
-    def target_model(cls):
-        return cls.model._meta.get_field(cls.field_name).rel.to
-
-    @classmethod
-    def get_required(cls):
-        null = cls.model._meta.get_field(cls.field_name).null
-        return not null
-
-    @classmethod
-    def widget_overrides(cls):
-        return {
-            cls.field_name: ModelChooserWidget(
-                cls.target_model(),
-                required=cls.get_required(),
-                chooser=cls.chooser,
-                label=cls.label,
-                display=cls.display,
-                list_display=cls.list_display,
-                has_list_filter=cls.has_list_filter,
-                adjustable_filter_type=cls.adjustable_filter_type,
-                filters=cls.filters,
-                page_size_param=cls.page_size_param,
-                page_size=cls.page_size,
-                pk_name=cls.pk_name,
-                translations=cls.translations,
-                thumbnail=cls.thumbnail,
-            )
-        }
-
-
-class ModelChooserPanel(object):
     def __init__(self, field_name, chooser, **kwargs):
         options = get_chooser_options(chooser)
         options.update(kwargs)
@@ -150,23 +101,47 @@ class ModelChooserPanel(object):
         self.pk_name = options.pop('pk_name', 'uuid')
         self.translations = options.pop('translations', [])
 
-    def bind_to_model(self, model):
-        return type(str('_ModelChooserPanel'), (BaseModelChooserPanel,), {
-            'model': model,
-            'field_name': self.field_name,
-            'chooser': self.chooser,
-            'label': self.label,
-            'display': self.display,
-            'list_display': self.list_display,
-            'has_list_filter': self.has_list_filter,
-            'adjustable_filter_type': self.adjustable_filter_type,
-            'thumbnail': self.thumbnail,
-            'filters': self.filters,
-            'page_size_param': self.page_size_param,
-            'page_size': self.page_size,
-            'pk_name': self.pk_name,
-            'translations': self.translations,
-        })
+        options.pop("content_type", None)
+        options.pop("queryset_manager_method", None)
+
+        super().__init__(field_name, **options)
+
+    def target_model(self):
+        return self.model._meta.get_field(self.field_name).related_model
+
+    def get_required(self):
+        null = self.model._meta.get_field(self.field_name).null
+        return not null
+
+    def widget_overrides(self):
+        return {
+            self.field_name: ModelChooserWidget(
+                self.target_model(),
+                required=self.get_required(),
+                chooser=self.chooser,
+                label=self.label,
+                display=self.display,
+                list_display=self.list_display,
+                has_list_filter=self.has_list_filter,
+                adjustable_filter_type=self.adjustable_filter_type,
+                filters=self.filters,
+                page_size_param=self.page_size_param,
+                page_size=self.page_size,
+                pk_name=self.pk_name,
+                translations=self.translations,
+                thumbnail=self.thumbnail,
+            )
+        }
+
+    def clone(self):
+        return self.__class__(
+            field_name=self.field_name,
+            widget=self.widget if hasattr(self, 'widget') else None,
+            heading=self.heading,
+            classname=self.classname,
+            help_text=self.help_text,
+            chooser=self.chooser,
+        )
 
 
 class BaseRemoteModelChooserPanel(BaseChooserPanel):
@@ -196,7 +171,9 @@ class BaseRemoteModelChooserPanel(BaseChooserPanel):
         }
 
 
-class RemoteModelChooserPanel(object):
+class RemoteModelChooserPanel(BaseChooserPanel):
+    object_type_name = 'remote_model'
+
     def __init__(self, field_name, chooser, **kwargs):
         options = get_chooser_options(chooser)
         options.update(kwargs)
@@ -213,18 +190,25 @@ class RemoteModelChooserPanel(object):
         self.pk_name = options.pop('pk_name', 'uuid')
         self.translations = options.pop('translations', [])
 
-    def bind_to_model(self, model):
-        return type(str('_RemoteModelChooserPanel'), (BaseRemoteModelChooserPanel,), {
-            'model': model,
-            'field_name': self.field_name,
-            'chooser': self.chooser,
-            'label': self.label,
-            'display': self.display,
-            'list_display': self.list_display,
-            'filters': self.filters,
-            'page_size_param': self.page_size_param,
-            'page_size': self.page_size,
-            'fields_to_save': self.fields_to_save,
-            'pk_name': self.pk_name,
-            'translations': self.translations,
-        })
+        super().__init__(field_name, **options)
+
+    def get_required(self):
+        blank = self.model._meta.get_field(self.field_name).blank
+        return not blank
+
+    def widget_overrides(self):
+        return {
+            self.field_name: RemoteModelChooserWidget(
+                self.chooser,
+                required=self.get_required(),
+                label=self.label,
+                display=self.display,
+                list_display=self.list_display,
+                filters=self.filters,
+                page_size_param=self.page_size_param,
+                page_size=self.page_size,
+                fields_to_save=self.fields_to_save,
+                pk_name=self.pk_name,
+                translations=self.translations,
+            )
+        }

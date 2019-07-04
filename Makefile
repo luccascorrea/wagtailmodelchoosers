@@ -34,7 +34,7 @@ update-test-fixture: ## Update test fixture from the db.
 	python ./tests/testapp/manage.py dumpdata --indent=4 -e contenttypes -e auth.permission -e auth.group -e sessions -e wagtailcore.site -e wagtailcore.pagerevision -e wagtailcore.grouppagepermission -e wagtailimages.rendition -e wagtailcore.collection -e wagtailcore.groupcollectionpermission > tests/testapp/core/fixtures/test_data.json
 
 dist: ## Compile the JS and CSS for release.
-	npm run dist
+	npm run dist && python setup.py sdist
 
 install:
 	npm run dist && pip uninstall -y wagtailmodelchoosers && python setup.py sdist && pip install `ls -td dist/* | head -1`
