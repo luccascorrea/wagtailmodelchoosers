@@ -121,3 +121,8 @@ def get_response_keys_map(resource_options):
         'previous': resource_options.get('remote_response_previous_page_key', 'previous'),
         'count': resource_options.get('remote_response_items_count_key', 'count'),
     }
+
+def curry(_curried_func, *args, **kwargs):
+    def _curried(*moreargs, **morekwargs):
+        return _curried_func(*args, *moreargs, **{**kwargs, **morekwargs})
+    return _curried

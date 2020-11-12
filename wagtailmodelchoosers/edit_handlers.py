@@ -6,7 +6,7 @@ from wagtailmodelchoosers.widgets import ModelChooserWidget, RemoteModelChooserW
 from wagtail.admin.compare import M2MFieldComparison, FieldComparison, ChildRelationComparison
 from wagtail.admin.edit_handlers import InlinePanel
 from wagtail.admin import compare
-from django.utils.functional import curry
+from wagtailmodelchoosers.utils import curry
 from django.utils.html import escape
 from django.db import models
 import collections
