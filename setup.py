@@ -14,7 +14,7 @@ except ImportError:
 
 install_requires = [
     'wagtail>=2.0,<3.0',  # Depends on Wagtail's Django and Django RestFramework depencencies
-    'django-filter>=1.1.0,<2.2',
+    'django-filter>=1.1.0,<=2.4',
 ]
 
 # Testing dependencies
