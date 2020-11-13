@@ -74,13 +74,26 @@ class ModelView(ListModelMixin, GenericViewSet):
         if not search:
             return queryset
 
+        params = self.get_params()
+        chooser = params["chooser"]
+        options = get_chooser_options(chooser)
+
+        search_fields = options.get("search_fields", [])
         queries = []
-        for field in cls._meta.get_fields():
-            if isinstance(field, CharField) or isinstance(field, TextField):
+        if not search_fields:
+            for field in cls._meta.get_fields():
+                if isinstance(field, CharField) or isinstance(field, TextField):
+                    kwargs = {}
+                    param_name = '%s__icontains' % field.name
+                    kwargs[param_name] = search
+                    queries.append(Q(**kwargs))
+        else:
+            for field in search_fields:
                 kwargs = {}
-                param_name = '%s__icontains' % field.name
+                param_name = '%s__icontains' % field
                 kwargs[param_name] = search
                 queries.append(Q(**kwargs))
+
 
         if len(queries):
             query = queries.pop()

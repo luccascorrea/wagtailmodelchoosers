@@ -30,6 +30,9 @@ class ModelChooser extends React.Component {
 
     // TODO: Props mutation WTF?
     input.value = newValue;
+    var ev = new Event('change', { bubbles: true});
+    ev.simulated = true;
+    input.dispatchEvent(ev);
   }
 
   render() {

@@ -8,6 +8,7 @@ const STR = {
   choose: 'Choose',
   choose_again: 'Choose another',
   clear: 'Clear choice',
+  edit: 'Edit'
 };
 
 const defaultProps = {
@@ -162,7 +163,7 @@ class BaseChooser extends React.Component {
         {!!edit_endpoint ? (
           <SecondaryButton
             onClick={this.onEdit}
-            label="Edit"
+            label={tr(STR, translations, 'edit')}
           />
         ) : null}
 
