@@ -1,11 +1,17 @@
 import React, { PropTypes, Component } from 'react';
 import Autosuggest from 'react-autosuggest';
+import { pluralize, tr } from '../utils';
 
 const getSuggestionValue = suggestion => suggestion.name;
 const renderSuggestion = () => null;
 
+const STR = {
+  type_to_search: 'Type to search'
+};
+
 const defaultProps = {
   filter: '',
+  translations: {},
 };
 
 const propTypes = {
@@ -14,6 +20,7 @@ const propTypes = {
   onChange: PropTypes.func.isRequired,
   endpoint: PropTypes.string.isRequired,
   filter: PropTypes.string,
+  translations: PropTypes.object
 };
 
 class AutoComplete extends Component {
@@ -66,6 +73,8 @@ class AutoComplete extends Component {
 
   render() {
     const { value, suggestions } = this.state;
+    const { translations } = this.props;
+    const searchLabel = tr(STR, translations, 'type_to_search');
 
     return (
       <div>
@@ -75,7 +84,7 @@ class AutoComplete extends Component {
           getSuggestionValue={getSuggestionValue}
           renderSuggestion={renderSuggestion}
           inputProps={{
-            placeholder: 'Type to search',
+            placeholder: searchLabel,
             value,
             onChange: this.onChange,
           }}

@@ -13,6 +13,8 @@ const STR = {
   choose: 'Choose',
   result: 'Result',
   results: 'Results',
+  no_results: 'Sorry, no results',
+  loading: 'Loading...',
   previous: 'Previous',
   page: 'Page',
   pages: 'Pages',
@@ -254,12 +256,16 @@ class ModelPicker extends React.Component {
 
   getPlaceholder() {
     const { list_display: listDisplay } = this.props;
+    const { translations } = this.props;
     const { loading } = this.state;
+
+    const noResultsLabel = tr(STR, translations, 'no_results');
+    const loadingLabel = tr(STR, translations, 'loading');
 
     return (
       <tr className="chooser__item">
         <td colSpan={listDisplay.length} className="chooser__cell chooser__cell--disabled">
-          {loading ? 'Loading...' : 'Sorry, no results'}
+          {loading ? loadingLabel : noResultsLabel}
         </td>
       </tr>
     );
@@ -449,6 +455,7 @@ class ModelPicker extends React.Component {
                 onLoadStart={this.onLoadStart}
                 endpoint={endpoint}
                 filter={this.addFilterParams('')}
+                translations={translations}
                 ref={(autoComplete) => { this.autoCompleteRef = autoComplete; }}
               />
             </div>

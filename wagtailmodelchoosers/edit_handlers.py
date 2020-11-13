@@ -93,6 +93,7 @@ class ModelChooserPanel(BaseChooserPanel):
         self.display = options.pop('display', 'title')
         self.list_display = options.pop('list_display', list(flatten([self.display])))
         self.adjustable_filter_type = options.pop('adjustable_filter_type', False)
+        self.search_fields = options.pop("search_fields", [])
         self.has_list_filter = options.pop('list_filter', None) is not None
         self.thumbnail = options.pop('thumbnail', None)
         self.filters = options.pop('filters', [])
@@ -124,6 +125,7 @@ class ModelChooserPanel(BaseChooserPanel):
                 list_display=self.list_display,
                 has_list_filter=self.has_list_filter,
                 adjustable_filter_type=self.adjustable_filter_type,
+                search_fields=self.search_fields,
                 filters=self.filters,
                 page_size_param=self.page_size_param,
                 page_size=self.page_size,
