@@ -32,6 +32,7 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
         self.page_size = kwargs.pop('page_size', None)
         self.pk_name = kwargs.pop('pk_name', 'uuid')
         self.translations = kwargs.pop('translations', [])
+        self.can_edit = kwargs.pop('can_edit', True)
 
         super(ModelChooserWidget, self).__init__(**kwargs)
 
@@ -86,6 +87,9 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
         return reverse('wagtailmodelchoosers_api_model', kwargs={"chooser": self.chooser})
 
     def get_edit_endpoint(self):
+        if not self.can_edit:
+            return None
+
         try:
             app, class_name = self.get_class_name()
             return reverse('%s_%s_modeladmin_%s' % (app, class_name.lower(), "edit"), kwargs={"instance_pk": 0})

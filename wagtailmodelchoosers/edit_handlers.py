@@ -101,6 +101,7 @@ class ModelChooserPanel(BaseChooserPanel):
         self.page_size = options.pop('page_size', None)
         self.pk_name = options.pop('pk_name', 'uuid')
         self.translations = options.pop('translations', [])
+        self.can_edit = options.pop('can_edit', True)
 
         options.pop("content_type", None)
         options.pop("queryset_manager_method", None)
@@ -132,6 +133,7 @@ class ModelChooserPanel(BaseChooserPanel):
                 pk_name=self.pk_name,
                 translations=self.translations,
                 thumbnail=self.thumbnail,
+                can_edit=self.can_edit
             )
         }
 
