@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ViewSet
 from rest_framework.views import APIView
 import operator
+import inspect
 from functools import reduce
 
 from wagtailmodelchoosers.paginators import GenericModelPaginator
@@ -124,7 +125,7 @@ class ModelView(ListModelMixin, GenericViewSet):
                 kwargs[param_name] = sub_val
                 filter_params.append(kwargs)
         if filter_params:
-            queryset = queryset.filter(reduce(filter_operator, [Q(**kwargs) for kwargs in filter_params]))
+            queryset = queryset.filter(reduce(filter_operator, [Q(**f_kwargs) for f_kwargs in filter_params]))
 
         return queryset
 
@@ -135,7 +136,12 @@ class ModelView(ListModelMixin, GenericViewSet):
         cls = apps.get_model(options["content_type"])
 
         queryset_manager_method = options.get("queryset_manager_method", "all")
-        queryset = getattr(cls.objects, queryset_manager_method)()
+        method = getattr(cls.objects, queryset_manager_method)
+        signature = inspect.signature(method)
+        if len(signature.parameters) > 0:
+            queryset = method(self.request)
+        else:
+            queryset = method()
         queryset = self.do_search(cls, queryset)
         queryset = self.do_filter(cls, queryset)
 
