@@ -174,6 +174,9 @@ class ModelView(ListModelMixin, GenericViewSet):
             if display_field["name"] not in fields_set:
                 fields.append(display_field["name"])
 
+        if options["display"] not in fields_set:
+            fields.append(options["display"])
+
         fields_set = set(fields)
         if thumbnail_field and thumbnail_field not in fields_set:
             fields.append(thumbnail_field)
