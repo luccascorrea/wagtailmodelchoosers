@@ -60,11 +60,8 @@ class ModelPicker extends React.Component {
       url: null,
       numPages: 0,
       page: 0,
-      suggestions: [],
-      suggestionsCount: 0,
-      shouldShowSuggestions: false,
-      loadingSuggestions: false,
-      queryString: ""
+      queryString: "",
+      search: ""
     };
 
     this.getDefaultUrl = this.getDefaultUrl.bind(this);
@@ -117,11 +114,6 @@ class ModelPicker extends React.Component {
   }
 
   onLoadSuggestions(suggestions) {
-    this.setState({
-      suggestions,
-      suggestionsCount: suggestions.length,
-      loadingSuggestions: false,
-    });
   }
 
   onFilterChanged(newQueryString) {
@@ -133,27 +125,27 @@ class ModelPicker extends React.Component {
   }
 
   onValueChange(newValue) {
-    const shouldShowSuggestions = newValue.trim().length > 2;
-
+    const shouldSearch = newValue.trim().length > 2 || newValue.trim().length === 0;
     this.setState({
-      shouldShowSuggestions,
+      search: encodeURIComponent(newValue.trim())
+    }, () => {
+      if (shouldSearch) {
+        this.navigate(this.getDefaultUrl())
+      }
     });
   }
 
   onLoadStart() {
-    this.setState({
-      loadingSuggestions: true,
-    });
   }
 
   getPaginationButtons() {
     const { translations } = this.props;
-    const { next, previous, shouldShowSuggestions } = this.state;
+    const { next, previous } = this.state;
 
     const prevLabel = tr(STR, translations, 'previous');
     const nextLabel = tr(STR, translations, 'next');
-    const prevEnabled = shouldShowSuggestions ? false : !!previous;
-    const nextEnabled = shouldShowSuggestions ? false : !!next;
+    const prevEnabled = !!previous;
+    const nextEnabled = !!next;
 
     return (
       <span>
@@ -173,16 +165,11 @@ class ModelPicker extends React.Component {
 
   getPageDisplay() {
     const { translations } = this.props;
-    const { numPages, page: currentPage, shouldShowSuggestions } = this.state;
+    const { numPages, page: currentPage } = this.state;
 
     let text;
-    if (shouldShowSuggestions) {
-      const label = tr(STR, translations, 'page');
-      text = `1 / 1 ${label}`;
-    } else {
-      const label = pluralize(STR, translations, 'result', 'results', numPages);
-      text = `${currentPage} / ${numPages} ${label}`;
-    }
+    const label = pluralize(STR, translations, 'result', 'results', numPages);
+    text = `${currentPage} / ${numPages} ${label}`;
 
     return <span className="admin-modal__pagination">{text}</span>;
   }
@@ -222,9 +209,9 @@ class ModelPicker extends React.Component {
   }
 
   getCount() {
-    const { count, shouldShowSuggestions, suggestionsCount } = this.state;
+    const { count } = this.state;
 
-    return shouldShowSuggestions ? suggestionsCount : count;
+    return count;
   }
 
   // eslint-disable-next-line
@@ -286,8 +273,8 @@ class ModelPicker extends React.Component {
   }
 
   getModels() {
-    const { shouldShowSuggestions, suggestions, models } = this.state;
-    return shouldShowSuggestions ? suggestions : models;
+    const { models } = this.state;
+    return models;
   }
 
   getPk(item) {
@@ -298,7 +285,12 @@ class ModelPicker extends React.Component {
 
   getDefaultUrl() {
     const { endpoint, page_size: pageSize, page_size_param: pageSizeParam } = this.props;
-    return `${endpoint}/?${pageSizeParam}=${pageSize}`;
+    const { search } = this.state;
+    let url = `${endpoint}/?${pageSizeParam}=${pageSize}`;
+    if (!!search) {
+      url = `${url}&search=${search}`;
+    }
+    return url;
   }
 
   select(pk) {
@@ -313,22 +305,14 @@ class ModelPicker extends React.Component {
   }
 
   navigateNext() {
-    const { shouldShowSuggestions, page } = this.state;
-
-    if (shouldShowSuggestions) {
-      return;
-    }
+    const { page } = this.state;
 
     const url = `${this.getDefaultUrl()}&page=${page + 1}`;
     this.navigate(url);
   }
 
   navigatePrevious() {
-    const { shouldShowSuggestions, page } = this.state;
-
-    if (shouldShowSuggestions) {
-      return;
-    }
+    const { page } = this.state;
 
     const url = `${this.getDefaultUrl()}&page=${page - 1}`;
     this.navigate(url);
