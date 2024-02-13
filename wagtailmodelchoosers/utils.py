@@ -7,9 +7,13 @@ from django.core.exceptions import ImproperlyConfigured
 try:
     basestring  # noqa: F821
 except NameError:
+    try:
+        from collections import Sequence
+    except ImportError:
+        from collections.abc import Sequence
     # Python 3
     def is_list(obj):
-        return isinstance(obj, collections.Sequence) and not isinstance(obj, (str, bytes))
+        return isinstance(obj, Sequence) and not isinstance(obj, (str, bytes))
 else:
     # Python 2
     def is_list(obj):
