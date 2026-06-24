@@ -15,7 +15,7 @@ clean-pyc: ## Remove Python file artifacts.
 	find . -name '*~' -exec rm -f {} +
 
 start: ## Starts the development server.
-	python ./tests/testapp/manage.py runserver
+	python ./tests/testapp/manage.py runserver 0.0.0.0:8000
 
 lint: ## Lint the project.
 	flake8 wagtailmodelchoosers tests setup.py

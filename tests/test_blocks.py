@@ -1,5 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 
+from django import forms
 from django.test import TestCase, override_settings
 try:
     from wagtail.models import Page
@@ -12,6 +13,10 @@ from wagtailmodelchoosers import blocks, widgets
 TEST_MODEL_CHOOSERS_OPTIONS = {
     'core_page': {
         'content_type': 'wagtailcore.Page',
+    },
+    'remote_test': {
+        'remote_endpoint': 'http://example.com/api',
+        'display': 'name',
     }
 }
 
@@ -98,3 +103,43 @@ class TestModelChooserBlock(TestCase):
     def test_widget(self):
         block = blocks.ModelChooserBlock('core_page')
         self.assertTrue(isinstance(block.widget, widgets.ModelChooserWidget))
+
+
+@override_settings(MODEL_CHOOSERS_OPTIONS=TEST_MODEL_CHOOSERS_OPTIONS)
+class TestRemoteModelChooserBlock(TestCase):
+    def test_serialize(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        self.assertEqual(block.get_prep_value({'id': 1, 'name': 'foo'}), {'id': 1, 'name': 'foo'})
+
+    def test_deserialize(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        self.assertEqual(block.to_python(None), {})
+        self.assertEqual(block.to_python({'id': 1, 'name': 'foo'}), {'id': 1, 'name': 'foo'})
+        self.assertEqual(block.to_python('{"id": 1, "name": "foo"}'), {'id': 1, 'name': 'foo'})
+
+    def test_bulk_to_python(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        res = block.bulk_to_python(['{"id": 1}', None])
+        self.assertEqual(res, [{'id': 1}, {}])
+
+    def test_value_from_form(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        self.assertEqual(block.value_from_form(None), None)
+        self.assertEqual(block.value_from_form('{"id": 1}'), '{"id": 1}')
+        self.assertEqual(block.value_from_form('invalid json'), None)
+
+    def test_render_basic(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        self.assertEqual(block.render_basic({'name': 'Hello'}), 'Hello')
+        self.assertEqual(block.render_basic('{"name": "Hello"}'), 'Hello')
+        self.assertEqual(block.render_basic(None), '')
+
+    def test_clean(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        self.assertEqual(block.clean({'id': 1}), {'id': 1})
+
+    def test_field_and_widget(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        field = block.field
+        self.assertTrue(isinstance(field, forms.CharField))
+        self.assertTrue(isinstance(block.widget, widgets.RemoteModelChooserWidget))

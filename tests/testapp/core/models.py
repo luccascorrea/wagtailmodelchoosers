@@ -12,7 +12,7 @@ try:
 except ImportError:
     from wagtail.core.models import Page
 
-__all__ = ['SimplePage']
+__all__ = ['SimplePage', 'SimpleModel']
 
 
 class SimplePage(Page):
@@ -22,3 +22,29 @@ class SimplePage(Page):
         FieldPanel('title', classname="full title"),
         FieldPanel('content'),
     ]
+
+
+class SimpleModelManager(models.Manager):
+    def custom_all(self):
+        return self.filter(name__contains='cool')
+
+    def custom_with_request(self, request):
+        if request.GET.get('req_filter') == '1':
+            return self.filter(name__contains='request')
+        return self.all()
+
+
+class SimpleModel(models.Model):
+    name = models.CharField(max_length=255)
+    is_cool = models.BooleanField(default=True)
+    status_choice = models.CharField(max_length=20, choices=[('draft', 'Draft'), ('published', 'Published')], default='draft')
+    owner = models.ForeignKey('auth.User', on_delete=models.CASCADE, null=True, blank=True)
+
+    objects = SimpleModelManager()
+
+    class Meta:
+        ordering = ['id']
+
+    def __str__(self):
+        return self.name
+

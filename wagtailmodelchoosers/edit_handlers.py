@@ -13,8 +13,14 @@ from wagtailmodelchoosers.utils import curry
 from django.utils.html import escape
 from django.db import models
 import collections
+try:
+    from collections.abc import Iterable
+except ImportError:
+    from collections import Iterable
+
 
 class InlineModelPanel(InlinePanel):
+    is_relation = True
 
     def get_comparison(self):
         if self.is_relation:
@@ -25,8 +31,19 @@ class InlineModelPanel(InlinePanel):
 
         field_comparisons = []
 
-        for panel in self.get_panel_definitions():
-            field_comparisons.extend(panel.bind_to_model(self.db_field.related_model).get_comparison())
+        # Use the panel_definitions property/method depending on version compatibility
+        panel_definitions = (
+            self.panel_definitions if hasattr(self, 'panel_definitions')
+            else self.get_panel_definitions()
+        )
+
+        for panel in panel_definitions:
+            # Bind using bind_to_model (Wagtail 3.0) or bind_to (Wagtail 2.x)
+            if hasattr(panel, 'bind_to_model'):
+                bound_panel = panel.bind_to_model(self.db_field.related_model)
+            else:
+                bound_panel = panel.bind_to(model=self.db_field.related_model)
+            field_comparisons.extend(bound_panel.get_comparison())
 
         return [curry(ChildModelComparison, field, field_comparisons)]
 
@@ -50,6 +67,7 @@ class ChildModelComparison(ChildRelationComparison):
         self.val_a = getattr(obj_a, accessor).all()
         self.val_b = getattr(obj_b, accessor).all()
 
+
 class ModelComparison(M2MFieldComparison):
     def __init__(self, field, obj_a, obj_b):
         if isinstance(field, models.ManyToOneRel):
@@ -61,13 +79,13 @@ class ModelComparison(M2MFieldComparison):
             super().__init__(field, obj_a, obj_b)
 
     def get_item_display(self, item):
-        if isinstance(self.val_a, collections.Iterable):
+        if isinstance(self.val_a, Iterable):
             return str(item)
         else:
             return str(self.field.model.objects.get(id=item))
 
     def get_items(self):
-        if isinstance(self.val_a, collections.Iterable):
+        if isinstance(self.val_a, Iterable):
             return super().get_items()
         else:
             return self.val_a, self.val_b
@@ -75,7 +93,7 @@ class ModelComparison(M2MFieldComparison):
     def htmldiff(self):
         # Get tags
         items_a, items_b = self.get_items()
-        if isinstance(items_a, collections.Iterable):
+        if isinstance(items_a, Iterable):
             return super().htmldiff()
         else:
             if items_a == items_b:
@@ -109,7 +127,12 @@ class ModelChooserPanel(BaseChooserPanel):
         options.pop("content_type", None)
         options.pop("queryset_manager_method", None)
 
-        super().__init__(field_name, **options)
+        panel_options = {}
+        for key in ('heading', 'classname', 'help_text', 'widget', 'disable_comments', 'permission'):
+            if key in options:
+                panel_options[key] = options.pop(key)
+
+        super().__init__(field_name, **panel_options)
 
     def target_model(self):
         return self.model._meta.get_field(self.field_name).related_model
@@ -139,6 +162,16 @@ class ModelChooserPanel(BaseChooserPanel):
                 can_edit=self.can_edit
             )
         }
+
+    def get_form_options(self):
+        if hasattr(super(), 'get_form_options'):
+            opts = super().get_form_options()
+        else:
+            opts = {}
+        if 'widgets' not in opts:
+            opts['widgets'] = {}
+        opts['widgets'].update(self.widget_overrides())
+        return opts
 
     def clone(self):
         return self.__class__(
@@ -197,7 +230,14 @@ class RemoteModelChooserPanel(BaseChooserPanel):
         self.pk_name = options.pop('pk_name', 'uuid')
         self.translations = options.pop('translations', [])
 
-        super().__init__(field_name, **options)
+        options.pop("remote_endpoint", None)
+
+        panel_options = {}
+        for key in ('heading', 'classname', 'help_text', 'widget', 'disable_comments', 'permission'):
+            if key in options:
+                panel_options[key] = options.pop(key)
+
+        super().__init__(field_name, **panel_options)
 
     def get_required(self):
         blank = self.model._meta.get_field(self.field_name).blank
@@ -219,3 +259,23 @@ class RemoteModelChooserPanel(BaseChooserPanel):
                 translations=self.translations,
             )
         }
+
+    def get_form_options(self):
+        if hasattr(super(), 'get_form_options'):
+            opts = super().get_form_options()
+        else:
+            opts = {}
+        if 'widgets' not in opts:
+            opts['widgets'] = {}
+        opts['widgets'].update(self.widget_overrides())
+        return opts
+
+    def clone(self):
+        return self.__class__(
+            field_name=self.field_name,
+            widget=self.widget if hasattr(self, 'widget') else None,
+            heading=self.heading,
+            classname=self.classname,
+            help_text=self.help_text,
+            chooser=self.chooser,
+        )

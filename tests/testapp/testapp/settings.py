@@ -5,25 +5,24 @@ import os
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
+ALLOWED_HOSTS = ['*']
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 
-# Application definition
+import wagtail
 
-try:
-    import wagtail.core
+if wagtail.VERSION >= (3, 0):
+    wagtail_core_app = 'wagtail'
+    site_middleware = None
+else:
     wagtail_core_app = 'wagtail.core'
     site_middleware = 'wagtail.core.middleware.SiteMiddleware'
-except ImportError:
-    wagtail_core_app = 'wagtail'
-    try:
-        import wagtail.contrib.legacy.sitemiddleware
-        site_middleware = 'wagtail.contrib.legacy.sitemiddleware.SiteMiddleware'
-    except ImportError:
-        site_middleware = None
+
+
+
 
 INSTALLED_APPS = [
     'wagtailmodelchoosers',
