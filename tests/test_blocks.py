@@ -1,7 +1,10 @@
 from __future__ import absolute_import, unicode_literals
 
 from django.test import TestCase, override_settings
-from wagtail.core.models import Page
+try:
+    from wagtail.models import Page
+except ImportError:
+    from wagtail.core.models import Page
 
 from core.models import SimplePage
 from wagtailmodelchoosers import blocks, widgets
@@ -44,15 +47,33 @@ class TestModelChooserBlock(TestCase):
     def test_form_render(self):
         block = blocks.ModelChooserBlock('core_page', help_text="pick a page, any page")
 
-        empty_form_html = block.render_form(None, 'page')
-        self.assertIn('<input type="hidden" value="" name="page"', empty_form_html)
-        self.assertIn('initModelChooser(', empty_form_html)
+        if hasattr(block, 'render_form'):
+            empty_form_html = block.render_form(None, 'page')
+            self.assertIn('<input type="hidden" value="" name="page"', empty_form_html)
+            self.assertIn('initModelChooser(', empty_form_html)
+        else:
+            try:
+                from wagtail.blocks import BlockWidget
+            except ImportError:
+                from wagtail.core.blocks import BlockWidget
+            empty_form_html = BlockWidget(block).render('page', None)
+            self.assertIn('data-value="null"', empty_form_html)
+            self.assertIn('initModelChooser(', empty_form_html)
 
         test_page = self.child_page
-        test_form_html = block.render_form(test_page, 'page')
-        expected_html = '<input type="hidden" value="%d" name="page" ' % test_page.id
-        self.assertIn(expected_html, test_form_html)
-        self.assertIn("pick a page, any page", test_form_html)
+        if hasattr(block, 'render_form'):
+            test_form_html = block.render_form(test_page, 'page')
+            expected_html = '<input type="hidden" value="%d" name="page" ' % test_page.id
+            self.assertIn(expected_html, test_form_html)
+            self.assertIn("pick a page, any page", test_form_html)
+        else:
+            try:
+                from wagtail.blocks import BlockWidget
+            except ImportError:
+                from wagtail.core.blocks import BlockWidget
+            test_form_html = BlockWidget(block).render('page', test_page)
+            self.assertIn('data-value="&quot;%d&quot;"' % test_page.id, test_form_html)
+            self.assertIn("pick a page, any page", test_form_html)
 
     def test_to_python(self):
         block = blocks.ModelChooserBlock('core_page')

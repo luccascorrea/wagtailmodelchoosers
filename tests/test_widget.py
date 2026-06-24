@@ -3,7 +3,10 @@ from __future__ import absolute_import, unicode_literals
 import uuid
 
 from django.test import TestCase
-from wagtail.core.models import Page
+try:
+    from wagtail.models import Page
+except ImportError:
+    from wagtail.core.models import Page
 
 from core.models import SimplePage
 from wagtailmodelchoosers import widgets
@@ -27,7 +30,8 @@ class TestModelChooserWidget(TestCase):
             'pk_name': 'id',
             'chooser': 'test_chooser',
             'has_list_filter': False,
-            'adjustable_filter_type': False
+            'adjustable_filter_type': False,
+            'search_fields': [],
         }
 
     def test_get_target_model_string(self):

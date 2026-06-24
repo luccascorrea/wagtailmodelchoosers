@@ -13,6 +13,18 @@ BASE_DIR = os.path.dirname(PROJECT_DIR)
 
 # Application definition
 
+try:
+    import wagtail.core
+    wagtail_core_app = 'wagtail.core'
+    site_middleware = 'wagtail.core.middleware.SiteMiddleware'
+except ImportError:
+    wagtail_core_app = 'wagtail'
+    try:
+        import wagtail.contrib.legacy.sitemiddleware
+        site_middleware = 'wagtail.contrib.legacy.sitemiddleware.SiteMiddleware'
+    except ImportError:
+        site_middleware = None
+
 INSTALLED_APPS = [
     'wagtailmodelchoosers',
 
@@ -26,7 +38,7 @@ INSTALLED_APPS = [
     'wagtail.images',
     'wagtail.search',
     'wagtail.admin',
-    'wagtail.core',
+    wagtail_core_app,
 
     'modelcluster',
     'taggit',
@@ -46,14 +58,13 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-
-    'wagtail.core.middleware.SiteMiddleware',
-    'wagtail.contrib.redirects.middleware.RedirectMiddleware',
 ]
+if site_middleware:
+    MIDDLEWARE.append(site_middleware)
+MIDDLEWARE.append('wagtail.contrib.redirects.middleware.RedirectMiddleware')
 
 ROOT_URLCONF = 'testapp.urls'
 

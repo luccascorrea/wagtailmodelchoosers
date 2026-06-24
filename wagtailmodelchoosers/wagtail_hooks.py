@@ -1,4 +1,7 @@
-from django.conf.urls import url
+try:
+    from django.urls import re_path as url
+except ImportError:
+    from django.conf.urls import url
 try:
     from django.contrib.staticfiles.templatetags.staticfiles import static
 except:
@@ -6,7 +9,10 @@ except:
 
 from django.utils.html import format_html, format_html_join
 
-from wagtail.core import hooks
+try:
+    from wagtail import hooks
+except ImportError:
+    from wagtail.core import hooks
 
 from wagtailmodelchoosers.views import ModelView, RemoteResourceView, FilterView
 

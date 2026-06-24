@@ -1,10 +1,13 @@
-from wagtail.admin.edit_handlers import BaseChooserPanel
+try:
+    from wagtail.admin.panels import BaseChooserPanel, InlinePanel
+except ImportError:
+    from wagtail.admin.edit_handlers import BaseChooserPanel, InlinePanel
+
 from wagtail.utils.decorators import cached_classmethod
 
 from wagtailmodelchoosers.utils import flatten, get_chooser_options
 from wagtailmodelchoosers.widgets import ModelChooserWidget, RemoteModelChooserWidget
 from wagtail.admin.compare import M2MFieldComparison, FieldComparison, ChildRelationComparison
-from wagtail.admin.edit_handlers import InlinePanel
 from wagtail.admin import compare
 from wagtailmodelchoosers.utils import curry
 from django.utils.html import escape
