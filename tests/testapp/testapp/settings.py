@@ -149,3 +149,16 @@ try:
     from .local import *
 except ImportError:
     pass
+
+MODEL_CHOOSERS_OPTIONS = {
+    'user_chooser': {
+        'content_type': 'auth.User',
+        'display': 'username',
+        'list_display': [
+            {'name': 'username', 'label': 'Username'},
+            {'name': 'email', 'label': 'Email'},
+        ],
+        'search_fields': ['username', 'email'],
+    }
+}
+

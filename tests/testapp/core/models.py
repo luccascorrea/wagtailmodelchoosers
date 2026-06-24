@@ -15,13 +15,24 @@ except ImportError:
 __all__ = ['SimplePage', 'SimpleModel']
 
 
+from wagtailmodelchoosers.edit_handlers import ModelChooserPanel
+
+
 class SimplePage(Page):
     content = models.TextField()
+    selected_user = models.ForeignKey(
+        'auth.User',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
 
     content_panels = [
         FieldPanel('title', classname="full title"),
         FieldPanel('content'),
+        ModelChooserPanel('selected_user', chooser='user_chooser'),
     ]
+
 
 
 class SimpleModelManager(models.Manager):
