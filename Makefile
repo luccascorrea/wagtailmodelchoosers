@@ -19,7 +19,8 @@ start: ## Starts the development server.
 
 lint: ## Lint the project.
 	flake8 wagtailmodelchoosers tests setup.py
-	isort --check-only --diff --recursive wagtailmodelchoosers tests setup.py
+	isort --check-only --diff wagtailmodelchoosers tests setup.py
+
 
 test: ## Test the project.
 	python ./runtests.py
