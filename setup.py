@@ -13,28 +13,29 @@ except ImportError:
 
 
 install_requires = [
-    'wagtail>=2.0,<3.0',  # Depends on Wagtail's Django and Django RestFramework depencencies
-    'django-filter>=1.1.0,<=2.4',
+    'wagtail>=2.0,<4.0',  # Depends on Wagtail's Django and Django RestFramework depencencies
+    'django-filter>=1.1.0,<=23.0',
 ]
 
 # Testing dependencies
 testing_extras = [
     # Required for running the tests
-    'tox>=2.3.1,<2.4',
+    'tox>=2.3.1',
 
     # For coverage and PEP8 linting
-    'coverage>=4.1.0,<4.2',
-    'flake8>=3.2.0,<3.3',
-    'flake8-colors>=0.1.6,<1',
-    'isort==4.2.5',
+    'coverage>=4.1.0',
+    'flake8>=3.2.0',
+    'flake8-colors>=0.1.6',
+    'isort>=4.2.5',
 ]
+
 
 # Documentation dependencies
 documentation_extras = [
 
 ]
 
-with open('README.rst', 'r', 'utf-8') as f:
+with open('README.md', 'r', 'utf-8') as f:
     readme = f.read()
 
 setup(
@@ -48,6 +49,7 @@ setup(
     include_package_data=True,
     license='MIT',
     long_description=readme,
+    long_description_content_type='text/markdown',
     classifiers=[
         'Environment :: Web Environment',
         'Intended Audience :: Developers',

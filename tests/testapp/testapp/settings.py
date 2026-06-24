@@ -5,13 +5,24 @@ import os
 
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
+ALLOWED_HOSTS = ['*']
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 
-# Application definition
+import wagtail
+
+if wagtail.VERSION >= (3, 0):
+    wagtail_core_app = 'wagtail'
+    site_middleware = None
+else:
+    wagtail_core_app = 'wagtail.core'
+    site_middleware = 'wagtail.core.middleware.SiteMiddleware'
+
+
+
 
 INSTALLED_APPS = [
     'wagtailmodelchoosers',
@@ -26,7 +37,7 @@ INSTALLED_APPS = [
     'wagtail.images',
     'wagtail.search',
     'wagtail.admin',
-    'wagtail.core',
+    wagtail_core_app,
 
     'modelcluster',
     'taggit',
@@ -46,14 +57,13 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-
-    'wagtail.core.middleware.SiteMiddleware',
-    'wagtail.contrib.redirects.middleware.RedirectMiddleware',
 ]
+if site_middleware:
+    MIDDLEWARE.append(site_middleware)
+MIDDLEWARE.append('wagtail.contrib.redirects.middleware.RedirectMiddleware')
 
 ROOT_URLCONF = 'testapp.urls'
 
@@ -139,3 +149,16 @@ try:
     from .local import *
 except ImportError:
     pass
+
+MODEL_CHOOSERS_OPTIONS = {
+    'user_chooser': {
+        'content_type': 'auth.User',
+        'display': 'username',
+        'list_display': [
+            {'name': 'username', 'label': 'Username'},
+            {'name': 'email', 'label': 'Email'},
+        ],
+        'search_fields': ['username', 'email'],
+    }
+}
+

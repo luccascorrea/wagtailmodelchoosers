@@ -4,7 +4,10 @@ from django import forms
 from django.apps import apps
 from django.utils.functional import cached_property
 
-from wagtail.core.blocks import ChooserBlock
+try:
+    from wagtail.blocks import ChooserBlock
+except ImportError:
+    from wagtail.core.blocks import ChooserBlock
 
 from wagtailmodelchoosers.utils import first_non_empty, flatten, get_chooser_options
 from wagtailmodelchoosers.widgets import ModelChooserWidget, RemoteModelChooserWidget
@@ -22,6 +25,7 @@ class ModelChooserBlock(ChooserBlock):
         self.list_display = options.pop('list_display', list(flatten([self.display])))
         self.has_list_filter = options.pop('list_filter', None) is not None
         self.adjustable_filter_type = options.pop('adjustable_filter_type', False)
+        self.search_fields = options.pop('search_fields', [])
         self.filters = options.pop('filters', [])
         self.page_size_param = options.pop('page_size_param', None)
         self.page_size = options.pop('page_size', None)
@@ -44,6 +48,7 @@ class ModelChooserBlock(ChooserBlock):
             list_display=self.list_display,
             has_list_filter=self.has_list_filter,
             adjustable_filter_type=self.adjustable_filter_type,
+            search_fields=self.search_fields,
             filters=self.filters,
             page_size_param=self.page_size_param,
             page_size=self.page_size,

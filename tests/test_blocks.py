@@ -1,7 +1,11 @@
 from __future__ import absolute_import, unicode_literals
 
+from django import forms
 from django.test import TestCase, override_settings
-from wagtail.core.models import Page
+try:
+    from wagtail.models import Page
+except ImportError:
+    from wagtail.core.models import Page
 
 from core.models import SimplePage
 from wagtailmodelchoosers import blocks, widgets
@@ -9,6 +13,10 @@ from wagtailmodelchoosers import blocks, widgets
 TEST_MODEL_CHOOSERS_OPTIONS = {
     'core_page': {
         'content_type': 'wagtailcore.Page',
+    },
+    'remote_test': {
+        'remote_endpoint': 'http://example.com/api',
+        'display': 'name',
     }
 }
 
@@ -44,15 +52,33 @@ class TestModelChooserBlock(TestCase):
     def test_form_render(self):
         block = blocks.ModelChooserBlock('core_page', help_text="pick a page, any page")
 
-        empty_form_html = block.render_form(None, 'page')
-        self.assertIn('<input type="hidden" value="" name="page"', empty_form_html)
-        self.assertIn('initModelChooser(', empty_form_html)
+        if hasattr(block, 'render_form'):
+            empty_form_html = block.render_form(None, 'page')
+            self.assertIn('<input type="hidden" value="" name="page"', empty_form_html)
+            self.assertIn('initModelChooser(', empty_form_html)
+        else:
+            try:
+                from wagtail.blocks import BlockWidget
+            except ImportError:
+                from wagtail.core.blocks import BlockWidget
+            empty_form_html = BlockWidget(block).render('page', None)
+            self.assertIn('data-value="null"', empty_form_html)
+            self.assertIn('initModelChooser(', empty_form_html)
 
         test_page = self.child_page
-        test_form_html = block.render_form(test_page, 'page')
-        expected_html = '<input type="hidden" value="%d" name="page" ' % test_page.id
-        self.assertIn(expected_html, test_form_html)
-        self.assertIn("pick a page, any page", test_form_html)
+        if hasattr(block, 'render_form'):
+            test_form_html = block.render_form(test_page, 'page')
+            expected_html = '<input type="hidden" value="%d" name="page" ' % test_page.id
+            self.assertIn(expected_html, test_form_html)
+            self.assertIn("pick a page, any page", test_form_html)
+        else:
+            try:
+                from wagtail.blocks import BlockWidget
+            except ImportError:
+                from wagtail.core.blocks import BlockWidget
+            test_form_html = BlockWidget(block).render('page', test_page)
+            self.assertIn('data-value="&quot;%d&quot;"' % test_page.id, test_form_html)
+            self.assertIn("pick a page, any page", test_form_html)
 
     def test_to_python(self):
         block = blocks.ModelChooserBlock('core_page')
@@ -77,3 +103,43 @@ class TestModelChooserBlock(TestCase):
     def test_widget(self):
         block = blocks.ModelChooserBlock('core_page')
         self.assertTrue(isinstance(block.widget, widgets.ModelChooserWidget))
+
+
+@override_settings(MODEL_CHOOSERS_OPTIONS=TEST_MODEL_CHOOSERS_OPTIONS)
+class TestRemoteModelChooserBlock(TestCase):
+    def test_serialize(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        self.assertEqual(block.get_prep_value({'id': 1, 'name': 'foo'}), {'id': 1, 'name': 'foo'})
+
+    def test_deserialize(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        self.assertEqual(block.to_python(None), {})
+        self.assertEqual(block.to_python({'id': 1, 'name': 'foo'}), {'id': 1, 'name': 'foo'})
+        self.assertEqual(block.to_python('{"id": 1, "name": "foo"}'), {'id': 1, 'name': 'foo'})
+
+    def test_bulk_to_python(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        res = block.bulk_to_python(['{"id": 1}', None])
+        self.assertEqual(res, [{'id': 1}, {}])
+
+    def test_value_from_form(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        self.assertEqual(block.value_from_form(None), None)
+        self.assertEqual(block.value_from_form('{"id": 1}'), '{"id": 1}')
+        self.assertEqual(block.value_from_form('invalid json'), None)
+
+    def test_render_basic(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        self.assertEqual(block.render_basic({'name': 'Hello'}), 'Hello')
+        self.assertEqual(block.render_basic('{"name": "Hello"}'), 'Hello')
+        self.assertEqual(block.render_basic(None), '')
+
+    def test_clean(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        self.assertEqual(block.clean({'id': 1}), {'id': 1})
+
+    def test_field_and_widget(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        field = block.field
+        self.assertTrue(isinstance(field, forms.CharField))
+        self.assertTrue(isinstance(block.widget, widgets.RemoteModelChooserWidget))

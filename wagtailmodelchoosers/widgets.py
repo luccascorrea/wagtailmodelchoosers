@@ -46,23 +46,23 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
 
     def get_instance(self, value):
         # helper method for cleanly turning 'value' into an instance object
-        if value is None or value == '':
+        if value is None or value == '' or value == 'undefined' or value == 'null':
             return None
         try:
             obj = self.target_model.objects.get(pk=value)
             return obj
-        except self.target_model.DoesNotExist:
+        except (self.target_model.DoesNotExist, ValueError):
             return None
 
     def get_instance_and_id(self, model_class, value):
-        if value is None:
+        if value is None or value == 'undefined' or value == 'null':
             return None, None
         elif isinstance(value, model_class):
             return value, value.pk
         else:
             try:
                 return model_class.objects.get(pk=value), value
-            except model_class.DoesNotExist:
+            except (model_class.DoesNotExist, ValueError):
                 return None, None
 
     def value_from_datadict(self, data, files, name):
@@ -73,7 +73,7 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
             result = super(ModelChooserWidget, self).value_from_datadict(data, files, 'id_%s' % name)
 
         # TODO: Validation should prevent model adding itself as a child
-        if result == '':
+        if result == '' or result == 'undefined' or result == 'null':
             return None
         else:
             if isinstance(result, str):
@@ -113,6 +113,10 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
         if not isinstance(value, self.target_model):
             value = self.get_instance(value)
 
+        pk_name = self.pk_name
+        if pk_name == 'uuid' and self.target_model:
+            pk_name = self.target_model._meta.pk.name
+
         data = {
             'label': self.label,
             'display': self.display,
@@ -122,7 +126,7 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
             'edit_endpoint': self.get_edit_endpoint(),
             'filters_endpoint': self.get_filters_endpoint(),
             'thumbnail': self.thumbnail,
-            'pk_name': self.pk_name,
+            'pk_name': pk_name,
             'required': self.required,
             'initial_display_value': self.get_display_value(value),
             'initial_thumbnail': self.get_thumbnail(value),
