@@ -14,17 +14,17 @@
 
 .admin-modal__header {
     padding: 1rem;
-    background: #374646;
+    background: var(--w-color-primary, #374646);
 }
 
 
 .admin-modal__header h2 {
-    color: #fff;
+    color: var(--w-color-white, #fff);
     margin: 0;
 }
 
 .admin-modal__content_wrapper {
-    background-color: #fff;
+    background-color: var(--w-color-white, #fff);
     overflow-y: auto;
     flex: 1;
     display: flex;
@@ -54,12 +54,12 @@
 }
 
 .admin-modal__filters h2 {
-    background-color: #fafafa;
+    background-color: var(--w-color-grey-50, #fafafa);
     font-size: 13px;
     line-height: 42px;
     margin-top: 0;
     padding-left: 8px;
-    border-bottom: 1px solid #e6e6e6;
+    border-bottom: 1px solid var(--w-color-grey-100, #e6e6e6);
 }
 
 .admin-modal__filters li {
@@ -86,9 +86,9 @@
     font-weight: 400;
     vertical-align: middle;
     display: block;
-    background-color: #fff;
-    border: 1px solid #43b1b0;
-    color: #43b1b0;
+    background-color: var(--w-color-white, #fff);
+    border: 1px solid var(--w-color-secondary, #43b1b0);
+    color: var(--w-color-secondary, #43b1b0);
     text-decoration: none;
     text-transform: uppercase;
     position: relative;
@@ -105,9 +105,9 @@
 
 
 .admin-modal__filters li.selected a {
-    color: #fff!important;
-    border-color: #43b1b0!important;
-    background-color: #43b1b0;
+    color: var(--w-color-white, #fff)!important;
+    border-color: var(--w-color-secondary, #43b1b0)!important;
+    background-color: var(--w-color-secondary, #43b1b0);
 }
 
 .admin-modal__dialog {
@@ -147,7 +147,7 @@
 
 
 .chooser-table thead {
-    background: #E9EAEA;
+    background: var(--w-color-grey-50, #E9EAEA);
 }
 
 .chooser-table thead td {
@@ -160,18 +160,18 @@
 }
 
 .chooser__item:hover {
-    background: #666;
+    background: var(--w-color-secondary, #666);
     cursor: pointer;
-    color: #fff;
+    color: var(--w-color-white, #fff);
 }
 
 .chooser__item:hover a {
-    color: #fff;
+    color: var(--w-color-white, #fff);
 }
 
 .chooser__cell {
     padding: .75rem 1rem;
-    border-bottom: solid 1px #eee;
+    border-bottom: solid 1px var(--w-color-grey-100, #eee);
 }
 
 
@@ -193,7 +193,7 @@
     left: 0;
     right: 0;
     padding: .75rem 1rem;
-    background: #f5f5f5;
+    background: var(--w-color-grey-50, #f5f5f5);
 }
 
 .admin-modal__action {
@@ -204,8 +204,8 @@
 
 .admin-modal__action input[type='text'] {
     padding: .5em;
-    background: #fff;
-    border-color: #ccc;
+    background: var(--w-color-white, #fff);
+    border-color: var(--w-color-grey-200, #ccc);
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 

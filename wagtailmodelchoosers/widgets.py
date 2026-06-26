@@ -109,6 +109,13 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
                 return value.pk
         return ''
 
+    def get_value_data(self, value):
+        if value is None:
+            return None
+        if isinstance(value, self.target_model):
+            return self.get_internal_value(value)
+        return value
+
     def get_js_init_data(self, id_, name, value):
         if not isinstance(value, self.target_model):
             value = self.get_instance(value)
@@ -199,6 +206,14 @@ class RemoteModelChooserWidget(WidgetWithScript, widgets.Input):
 
     def get_internal_value(self, value):
         return json.dumps(value) if value else ''
+
+    def get_value_data(self, value):
+        if isinstance(value, str):
+            try:
+                return json.loads(value)
+            except ValueError:
+                return {}
+        return value
 
     def get_js_init_data(self, id_, name, value):
         data = {
