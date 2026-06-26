@@ -1,7 +1,13 @@
 try:
-    from wagtail.admin.panels import BaseChooserPanel, InlinePanel
+    from wagtail.admin.panels import FieldPanel, InlinePanel
+    ChooserPanelParent = FieldPanel
 except ImportError:
-    from wagtail.admin.edit_handlers import BaseChooserPanel, InlinePanel
+    try:
+        from wagtail.admin.edit_handlers import BaseChooserPanel, InlinePanel
+        ChooserPanelParent = BaseChooserPanel
+    except ImportError:
+        from wagtail.admin.edit_handlers import FieldPanel, InlinePanel
+        ChooserPanelParent = FieldPanel
 
 from wagtail.utils.decorators import cached_classmethod
 
@@ -100,7 +106,7 @@ class ModelComparison(M2MFieldComparison):
                 return escape(self.get_item_display(items_a))
             else:
                 return compare.TextDiff([('deletion', self.get_item_display(items_a)), ('addition', self.get_item_display(items_b))]).to_html()
-class ModelChooserPanel(BaseChooserPanel):
+class ModelChooserPanel(ChooserPanelParent):
     object_type_name = 'model'
 
 
@@ -184,7 +190,7 @@ class ModelChooserPanel(BaseChooserPanel):
         )
 
 
-class BaseRemoteModelChooserPanel(BaseChooserPanel):
+class BaseRemoteModelChooserPanel(ChooserPanelParent):
     object_type_name = 'remote_model'
 
     @classmethod
@@ -211,7 +217,7 @@ class BaseRemoteModelChooserPanel(BaseChooserPanel):
         }
 
 
-class RemoteModelChooserPanel(BaseChooserPanel):
+class RemoteModelChooserPanel(ChooserPanelParent):
     object_type_name = 'remote_model'
 
     def __init__(self, field_name, chooser, **kwargs):

@@ -77,7 +77,11 @@ class TestModelChooserBlock(TestCase):
             except ImportError:
                 from wagtail.core.blocks import BlockWidget
             test_form_html = BlockWidget(block).render('page', test_page)
-            self.assertIn('data-value="&quot;%d&quot;"' % test_page.id, test_form_html)
+            expected_values = [
+                'data-value="&quot;%d&quot;"' % test_page.id,
+                'data-value="%d"' % test_page.id,
+            ]
+            self.assertTrue(any(val in test_form_html for val in expected_values))
             self.assertIn("pick a page, any page", test_form_html)
 
     def test_to_python(self):
