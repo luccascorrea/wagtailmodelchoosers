@@ -5,19 +5,13 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 try:
-    basestring  # noqa: F821
-except NameError:
-    try:
-        from collections import Sequence
-    except ImportError:
-        from collections.abc import Sequence
-    # Python 3
-    def is_list(obj):
-        return isinstance(obj, Sequence) and not isinstance(obj, (str, bytes))
-else:
-    # Python 2
-    def is_list(obj):
-        return isinstance(obj, collections.Sequence) and not isinstance(obj, basestring)  # noqa: F821
+    from collections.abc import Sequence
+except ImportError:
+    from collections import Sequence
+
+
+def is_list(obj):
+    return isinstance(obj, Sequence) and not isinstance(obj, (str, bytes))
 
 
 def flatten(list_):
@@ -125,6 +119,7 @@ def get_response_keys_map(resource_options):
         'previous': resource_options.get('remote_response_previous_page_key', 'previous'),
         'count': resource_options.get('remote_response_items_count_key', 'count'),
     }
+
 
 def curry(_curried_func, *args, **kwargs):
     def _curried(*moreargs, **morekwargs):

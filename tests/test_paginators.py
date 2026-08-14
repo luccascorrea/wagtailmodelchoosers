@@ -1,12 +1,7 @@
-from django.test import TestCase, override_settings
 from django.core.exceptions import ImproperlyConfigured
+from django.test import TestCase, override_settings
 
-from wagtailmodelchoosers.utils import (
-    flatten,
-    curry,
-    first_non_empty,
-    get_chooser_options,
-)
+from wagtailmodelchoosers.utils import curry, first_non_empty, flatten, get_chooser_options
 
 
 class TestUtils(TestCase):
@@ -49,7 +44,10 @@ class TestUtils(TestCase):
     def test_get_chooser_options_no_content_or_remote(self):
         with self.assertRaises(ImproperlyConfigured) as ctx:
             get_chooser_options('invalid')
-        self.assertIn('should define either `content_type` (for models) or `remote_endpoint` (for remote models)', str(ctx.exception))
+        self.assertIn(
+            'should define either `content_type` (for models) or `remote_endpoint` (for remote models)',
+            str(ctx.exception),
+        )
 
     @override_settings(MODEL_CHOOSERS_OPTIONS={
         'invalid_fields': {

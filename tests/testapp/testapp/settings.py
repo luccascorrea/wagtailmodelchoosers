@@ -1,18 +1,16 @@
 from __future__ import absolute_import, unicode_literals
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
+import wagtail
+
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = os.path.dirname(PROJECT_DIR)
 ALLOWED_HOSTS = ['*']
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
-
-
-import wagtail
 
 if wagtail.VERSION >= (3, 0):
     wagtail_core_app = 'wagtail'
@@ -106,9 +104,9 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
@@ -136,6 +134,7 @@ WAGTAIL_SITE_NAME = "testapp"
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 BASE_URL = 'http://example.com'
+WAGTAILADMIN_BASE_URL = 'http://example.com'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -161,4 +160,3 @@ MODEL_CHOOSERS_OPTIONS = {
         'search_fields': ['username', 'email'],
     }
 }
-

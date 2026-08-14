@@ -4,9 +4,9 @@ import uuid
 from django.apps import apps
 from django.forms import widgets
 from django.template.loader import render_to_string
-from django.utils.functional import cached_property
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
+from django.utils.functional import cached_property
 from wagtail.utils.widgets import WidgetWithScript
 
 from .utils import first_non_empty
@@ -16,7 +16,18 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
     is_hidden = True
     template_name = 'wagtailmodelchoosers/widgets/model_chooser.html'
 
-    def __init__(self, target_model, display, list_display, has_list_filter, adjustable_filter_type, search_fields, chooser, required=True, **kwargs):
+    def __init__(
+        self,
+        target_model,
+        display,
+        list_display,
+        has_list_filter,
+        adjustable_filter_type,
+        search_fields,
+        chooser,
+        required=True,
+        **kwargs
+    ):
         self.required = required
         self._target_model = target_model
         self.label = kwargs.pop('label', self.get_class_name()[1])

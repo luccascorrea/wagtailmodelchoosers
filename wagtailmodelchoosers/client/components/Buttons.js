@@ -14,6 +14,7 @@ const Button = ({ isActive, classes, label, onClick }) => {
       type="button"
       onClick={onClick}
       className={buttonClasses.join(' ')}
+      disabled={!isActive}
     >
       {label}
     </button>

@@ -96,6 +96,12 @@ class ModelChooserBlock(ChooserBlock):
     def render_basic(self, value, context=None):
         return first_non_empty(value, self.display, default='')
 
+    def extract_references(self, value):
+        if value is not None:
+            pk = value.pk if isinstance(value, self.target_model) else value
+            if pk is not None:
+                yield self.target_model, str(pk), "", ""
+
     class Meta:
         icon = "snippet"
 
@@ -182,6 +188,10 @@ class RemoteModelChooserBlock(ChooserBlock):
 
     def clean(self, value):
         return value
+
+    def extract_references(self, value):
+        # Remote objects are external API resources, not local database models.
+        return []
 
     class Meta:
         icon = 'snippet'
