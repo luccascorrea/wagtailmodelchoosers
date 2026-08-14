@@ -1,16 +1,20 @@
 from __future__ import absolute_import, unicode_literals
 
 from django.conf import settings
+
 try:
-    from django.urls import re_path as url, include
+    from django.urls import include
+    from django.urls import re_path as url
 except ImportError:
     from django.conf.urls import include, url
 
 from wagtail.admin import urls as wagtailadmin_urls
+
 try:
     from wagtail import urls as wagtail_urls
 except ImportError:
     from wagtail.core import urls as wagtail_urls
+
 from wagtail.documents import urls as wagtaildocs_urls
 from wagtail.images import urls as wagtailimages_urls
 

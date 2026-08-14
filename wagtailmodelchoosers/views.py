@@ -1,8 +1,12 @@
+import inspect
+import operator
+from functools import reduce
+
 import requests
 from django.apps import apps
 from django.conf import settings
-from django.db.models import CharField, BooleanField, TextField, Q
-from django.db.models.fields.related import (ManyToManyRel, OneToOneRel, RelatedField)
+from django.db.models import BooleanField, CharField, Q, TextField
+from django.db.models.fields.related import ManyToManyRel, OneToOneRel, RelatedField
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import serializers
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication
@@ -10,11 +14,8 @@ from rest_framework.filters import SearchFilter
 from rest_framework.mixins import ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ViewSet
 from rest_framework.views import APIView
-import operator
-import inspect
-from functools import reduce
+from rest_framework.viewsets import GenericViewSet, ViewSet
 
 from wagtailmodelchoosers.paginators import GenericModelPaginator
 from wagtailmodelchoosers.utils import (
@@ -22,6 +23,7 @@ from wagtailmodelchoosers.utils import (
     get_query_keys_map,
     get_response_keys_map,
 )
+
 
 class FilterView(APIView):
     def get(self, *args, **kwargs):

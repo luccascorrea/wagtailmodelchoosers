@@ -4,7 +4,7 @@ except ImportError:
     from django.conf.urls import url
 try:
     from django.contrib.staticfiles.templatetags.staticfiles import static
-except:
+except ImportError:
     from django.templatetags.static import static
 
 from django.utils.html import format_html, format_html_join
@@ -14,7 +14,7 @@ try:
 except ImportError:
     from wagtail.core import hooks
 
-from wagtailmodelchoosers.views import ModelView, RemoteResourceView, FilterView
+from wagtailmodelchoosers.views import FilterView, ModelView, RemoteResourceView
 
 
 @hooks.register('insert_editor_css')

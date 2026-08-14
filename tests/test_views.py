@@ -1,9 +1,9 @@
-from unittest.mock import patch, MagicMock
-from django.test import TestCase, override_settings
-from django.contrib.auth import get_user_model
-from django.urls import reverse
+from unittest.mock import MagicMock, patch
 
 from core.models import SimpleModel
+from django.contrib.auth import get_user_model
+from django.test import TestCase, override_settings
+from django.urls import reverse
 
 User = get_user_model()
 

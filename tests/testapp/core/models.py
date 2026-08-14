@@ -48,7 +48,11 @@ class SimpleModelManager(models.Manager):
 class SimpleModel(models.Model):
     name = models.CharField(max_length=255)
     is_cool = models.BooleanField(default=True)
-    status_choice = models.CharField(max_length=20, choices=[('draft', 'Draft'), ('published', 'Published')], default='draft')
+    status_choice = models.CharField(
+        max_length=20,
+        choices=[('draft', 'Draft'), ('published', 'Published')],
+        default='draft'
+    )
     owner = models.ForeignKey('auth.User', on_delete=models.CASCADE, null=True, blank=True)
 
     objects = SimpleModelManager()
@@ -58,4 +62,3 @@ class SimpleModel(models.Model):
 
     def __str__(self):
         return self.name
-

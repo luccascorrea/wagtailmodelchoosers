@@ -2,12 +2,24 @@ from __future__ import absolute_import, unicode_literals
 
 from django import forms
 from django.test import TestCase, override_settings
+
+try:
+    from wagtail.blocks import StreamBlock
+except ImportError:
+    from wagtail.core.blocks import StreamBlock
+
 try:
     from wagtail.models import Page
 except ImportError:
     from wagtail.core.models import Page
 
+try:
+    from wagtail.models.reference_index import ReferenceIndex
+except ImportError:
+    ReferenceIndex = None
+
 from core.models import SimplePage
+
 from wagtailmodelchoosers import blocks, widgets
 
 TEST_MODEL_CHOOSERS_OPTIONS = {
@@ -108,6 +120,24 @@ class TestModelChooserBlock(TestCase):
         block = blocks.ModelChooserBlock('core_page')
         self.assertTrue(isinstance(block.widget, widgets.ModelChooserWidget))
 
+    def test_extract_references_instance(self):
+        block = blocks.ModelChooserBlock('core_page')
+        refs = list(block.extract_references(self.child_page))
+        self.assertEqual(refs, [(Page, str(self.child_page.pk), "", "")])
+
+    def test_extract_references_pk(self):
+        block = blocks.ModelChooserBlock('core_page')
+        refs = list(block.extract_references(self.child_page.pk))
+        self.assertEqual(refs, [(Page, str(self.child_page.pk), "", "")])
+
+        refs_str = list(block.extract_references(str(self.child_page.pk)))
+        self.assertEqual(refs_str, [(Page, str(self.child_page.pk), "", "")])
+
+    def test_extract_references_none(self):
+        block = blocks.ModelChooserBlock('core_page')
+        refs = list(block.extract_references(None))
+        self.assertEqual(refs, [])
+
 
 @override_settings(MODEL_CHOOSERS_OPTIONS=TEST_MODEL_CHOOSERS_OPTIONS)
 class TestRemoteModelChooserBlock(TestCase):
@@ -147,3 +177,40 @@ class TestRemoteModelChooserBlock(TestCase):
         field = block.field
         self.assertTrue(isinstance(field, forms.CharField))
         self.assertTrue(isinstance(block.widget, widgets.RemoteModelChooserWidget))
+
+    def test_extract_references(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        self.assertEqual(list(block.extract_references(None)), [])
+        self.assertEqual(list(block.extract_references({'id': 1, 'name': 'foo'})), [])
+        self.assertEqual(list(block.extract_references('{"id": 1, "name": "foo"}')), [])
+
+
+@override_settings(MODEL_CHOOSERS_OPTIONS=TEST_MODEL_CHOOSERS_OPTIONS)
+class TestStreamFieldReferenceExtraction(TestCase):
+    def setUp(self):
+        self.root_page = Page.objects.get(id=2)
+        self.child_page = SimplePage(
+            title="stream test child",
+            content="stream content",
+        )
+        self.root_page.add_child(instance=self.child_page)
+
+    def test_stream_block_extract_references(self):
+        sb = StreamBlock([
+            ('model', blocks.ModelChooserBlock('core_page')),
+            ('remote', blocks.RemoteModelChooserBlock('remote_test')),
+        ])
+        val = sb.to_python([
+            {'type': 'model', 'value': self.child_page.pk},
+            {'type': 'remote', 'value': {'id': 'ext-123', 'name': 'External Data'}},
+        ])
+        if hasattr(sb, 'extract_references'):
+            refs = list(sb.extract_references(val))
+            self.assertEqual(len(refs), 1)
+            self.assertEqual(refs[0][0], Page)
+            self.assertEqual(refs[0][1], str(self.child_page.pk))
+
+    def test_reference_index_compatibility(self):
+        if ReferenceIndex is not None:
+            refs = list(ReferenceIndex._extract_references_from_object(self.child_page))
+            self.assertIsInstance(refs, list)

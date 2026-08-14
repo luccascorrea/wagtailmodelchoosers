@@ -9,16 +9,17 @@ except ImportError:
         from wagtail.admin.edit_handlers import FieldPanel, InlinePanel
         ChooserPanelParent = FieldPanel
 
+import collections
+
+from django.db import models
+from django.utils.html import escape
+from wagtail.admin import compare
+from wagtail.admin.compare import ChildRelationComparison, FieldComparison, M2MFieldComparison
 from wagtail.utils.decorators import cached_classmethod
 
-from wagtailmodelchoosers.utils import flatten, get_chooser_options
+from wagtailmodelchoosers.utils import curry, flatten, get_chooser_options
 from wagtailmodelchoosers.widgets import ModelChooserWidget, RemoteModelChooserWidget
-from wagtail.admin.compare import M2MFieldComparison, FieldComparison, ChildRelationComparison
-from wagtail.admin import compare
-from wagtailmodelchoosers.utils import curry
-from django.utils.html import escape
-from django.db import models
-import collections
+
 try:
     from collections.abc import Iterable
 except ImportError:
@@ -105,7 +106,12 @@ class ModelComparison(M2MFieldComparison):
             if items_a == items_b:
                 return escape(self.get_item_display(items_a))
             else:
-                return compare.TextDiff([('deletion', self.get_item_display(items_a)), ('addition', self.get_item_display(items_b))]).to_html()
+                return compare.TextDiff([
+                    ('deletion', self.get_item_display(items_a)),
+                    ('addition', self.get_item_display(items_b)),
+                ]).to_html()
+
+
 class ModelChooserPanel(ChooserPanelParent):
     object_type_name = 'model'
 

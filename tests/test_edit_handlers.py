@@ -1,7 +1,8 @@
-from django.test import TestCase, override_settings
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.forms import Media
-from django.contrib.auth import get_user_model
+from django.test import TestCase, override_settings
+
 try:
     from wagtail.models import Page
 except ImportError:
@@ -10,14 +11,13 @@ except ImportError:
 from core.models import SimplePage
 
 from wagtailmodelchoosers.edit_handlers import (
-    ModelChooserPanel,
-    RemoteModelChooserPanel,
-    InlineModelPanel,
-    ModelComparison,
     ChildModelComparison,
+    InlineModelPanel,
+    ModelChooserPanel,
+    ModelComparison,
+    RemoteModelChooserPanel,
 )
 from wagtailmodelchoosers.widgets import ModelChooserWidget, RemoteModelChooserWidget
-
 
 TEST_MODEL_CHOOSERS_OPTIONS = {
     'core_page': {
@@ -113,18 +113,22 @@ class TestComparisons(TestCase):
         class MockField(models.ManyToOneRel):
             def __init__(self):
                 pass
+
             def get_accessor_name(self):
                 return 'mock_accessor'
 
         class MockObj:
             def __init__(self, val):
                 self.val = val
+
             @property
             def mock_accessor(self):
                 outer_val = self.val
+
                 class MockAll:
                     def all(self):
                         return outer_val
+
                 return MockAll()
 
         field = MockField()
