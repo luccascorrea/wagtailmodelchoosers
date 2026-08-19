@@ -7,13 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
-...
+- Official compatibility and test coverage for **Wagtail 4.2.4 (LTS)**.
+- Expanded `tox.ini` matrix testing covering Wagtail 4.2 across Django 3.2, 4.0, 4.1, 4.2 and Python 3.8–3.12.
+- Additional test cases for Wagtail 4.2 panel binding lifecycles, clone methods, and revision diffing comparisons (`ModelComparison`, `ChildModelComparison`).
 
-### Changed
-...
-
-### Fixed
-...
+### Verified
+- Verified compatibility with Wagtail 4.2 panel submodule reorganization (`wagtail.admin.panels`).
+- Verified `extract_references` behavior in `ModelChooserBlock` and `RemoteModelChooserBlock` for `ReferenceIndex` traversal.
+- Verified Willow image pipeline compatibility with thumbnail resolution.
 
 # [0.4.2] - 2018-08-20
 

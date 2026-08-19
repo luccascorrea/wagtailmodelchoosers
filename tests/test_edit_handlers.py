@@ -97,6 +97,12 @@ class TestEditHandlers(TestCase):
         self.assertTrue(isinstance(widget, RemoteModelChooserWidget))
         self.assertEqual(widget.chooser, 'remote_test')
 
+    def test_remote_model_chooser_panel_clone(self):
+        panel = RemoteModelChooserPanel('owner', 'remote_test')
+        cloned = panel.clone()
+        self.assertEqual(cloned.field_name, 'owner')
+        self.assertEqual(cloned.chooser, 'remote_test')
+
     def test_inline_model_panel(self):
         # We can instantiate InlineModelPanel. It inherits from InlinePanel.
         panel = InlineModelPanel('simple_children', panels=[])
@@ -152,3 +158,45 @@ class TestComparisons(TestCase):
         # Should delegate to M2MFieldComparison
         comparison = ModelComparison(field, obj_a, obj_b)
         self.assertEqual(comparison.field, field)
+
+    def test_model_comparison_htmldiff_identical(self):
+        class MockField(models.Field):
+            model = Page
+            attname = 'mock_field'
+
+        class MockObj:
+            mock_field = ['item1', 'item2']
+
+        field = MockField()
+        obj_a = MockObj()
+        obj_b = MockObj()
+        comparison = ModelComparison(field, obj_a, obj_b)
+        diff = comparison.htmldiff()
+        self.assertIn('item1', str(diff))
+        self.assertIn('item2', str(diff))
+
+    def test_child_model_comparison_init(self):
+        class MockField:
+            def get_accessor_name(self):
+                return 'children'
+
+        class MockObj:
+            def __init__(self, items):
+                self._items = items
+
+            @property
+            def children(self):
+                items = self._items
+
+                class MockAll:
+                    def all(self):
+                        return items
+
+                return MockAll()
+
+        field = MockField()
+        obj_a = MockObj(['a1', 'a2'])
+        obj_b = MockObj(['b1'])
+        child_comp = ChildModelComparison(field, [], obj_a, obj_b)
+        self.assertEqual(list(child_comp.val_a), ['a1', 'a2'])
+        self.assertEqual(list(child_comp.val_b), ['b1'])
