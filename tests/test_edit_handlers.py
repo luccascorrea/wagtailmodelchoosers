@@ -77,6 +77,23 @@ class TestEditHandlers(TestCase):
         self.assertEqual(cloned.field_name, 'owner')
         self.assertEqual(cloned.chooser, 'core_page')
 
+    def test_model_chooser_panel_with_icon_and_base_form_class(self):
+        panel = ModelChooserPanel('owner', 'core_page', icon='user', heading='Owner Heading')
+        self.assertEqual(getattr(panel, 'icon', None), 'user')
+        self.assertEqual(panel.heading, 'Owner Heading')
+        cloned = panel.clone()
+        self.assertEqual(getattr(cloned, 'icon', None), 'user')
+        self.assertEqual(cloned.heading, 'Owner Heading')
+
+    def test_model_chooser_panel_clone_kwargs(self):
+        panel = ModelChooserPanel('owner', 'core_page', icon='snippet', heading='Custom')
+        if hasattr(panel, 'clone_kwargs'):
+            kwargs = panel.clone_kwargs()
+            self.assertEqual(kwargs['field_name'], 'owner')
+            self.assertEqual(kwargs['chooser'], 'core_page')
+            self.assertEqual(kwargs['icon'], 'snippet')
+            self.assertEqual(kwargs['heading'], 'Custom')
+
     def test_remote_model_chooser_panel(self):
         panel = RemoteModelChooserPanel('owner', 'remote_test')
         self.assertEqual(panel.field_name, 'owner')
@@ -102,6 +119,23 @@ class TestEditHandlers(TestCase):
         cloned = panel.clone()
         self.assertEqual(cloned.field_name, 'owner')
         self.assertEqual(cloned.chooser, 'remote_test')
+
+    def test_remote_model_chooser_panel_with_icon(self):
+        panel = RemoteModelChooserPanel('owner', 'remote_test', icon='doc-full', heading='Remote Heading')
+        self.assertEqual(getattr(panel, 'icon', None), 'doc-full')
+        self.assertEqual(panel.heading, 'Remote Heading')
+        cloned = panel.clone()
+        self.assertEqual(getattr(cloned, 'icon', None), 'doc-full')
+        self.assertEqual(cloned.heading, 'Remote Heading')
+
+    def test_remote_model_chooser_panel_clone_kwargs(self):
+        panel = RemoteModelChooserPanel('owner', 'remote_test', icon='link', heading='Remote')
+        if hasattr(panel, 'clone_kwargs'):
+            kwargs = panel.clone_kwargs()
+            self.assertEqual(kwargs['field_name'], 'owner')
+            self.assertEqual(kwargs['chooser'], 'remote_test')
+            self.assertEqual(kwargs['icon'], 'link')
+            self.assertEqual(kwargs['heading'], 'Remote')
 
     def test_inline_model_panel(self):
         # We can instantiate InlineModelPanel. It inherits from InlinePanel.

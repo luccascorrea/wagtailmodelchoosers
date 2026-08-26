@@ -139,8 +139,12 @@ class ModelChooserPanel(ChooserPanelParent):
         options.pop("content_type", None)
         options.pop("queryset_manager_method", None)
 
+        panel_keys = (
+            'heading', 'classname', 'help_text', 'widget',
+            'disable_comments', 'permission', 'icon', 'base_form_class',
+        )
         panel_options = {}
-        for key in ('heading', 'classname', 'help_text', 'widget', 'disable_comments', 'permission'):
+        for key in panel_keys:
             if key in options:
                 panel_options[key] = options.pop(key)
 
@@ -185,10 +189,27 @@ class ModelChooserPanel(ChooserPanelParent):
         opts['widgets'].update(self.widget_overrides())
         return opts
 
+    def clone_kwargs(self):
+        kwargs = super().clone_kwargs() if hasattr(super(), 'clone_kwargs') else {}
+        kwargs.update({
+            'field_name': self.field_name,
+            'chooser': self.chooser,
+            'widget': getattr(self, 'widget', None),
+            'heading': self.heading,
+            'classname': self.classname,
+            'help_text': self.help_text,
+            'icon': getattr(self, 'icon', ''),
+            'disable_comments': getattr(self, 'disable_comments', None),
+            'permission': getattr(self, 'permission', None),
+        })
+        return kwargs
+
     def clone(self):
+        if hasattr(super(), 'clone_kwargs'):
+            return self.__class__(**self.clone_kwargs())
         return self.__class__(
             field_name=self.field_name,
-            widget=self.widget if hasattr(self, 'widget') else None,
+            widget=getattr(self, 'widget', None),
             heading=self.heading,
             classname=self.classname,
             help_text=self.help_text,
@@ -244,8 +265,12 @@ class RemoteModelChooserPanel(ChooserPanelParent):
 
         options.pop("remote_endpoint", None)
 
+        panel_keys = (
+            'heading', 'classname', 'help_text', 'widget',
+            'disable_comments', 'permission', 'icon', 'base_form_class',
+        )
         panel_options = {}
-        for key in ('heading', 'classname', 'help_text', 'widget', 'disable_comments', 'permission'):
+        for key in panel_keys:
             if key in options:
                 panel_options[key] = options.pop(key)
 
@@ -282,10 +307,27 @@ class RemoteModelChooserPanel(ChooserPanelParent):
         opts['widgets'].update(self.widget_overrides())
         return opts
 
+    def clone_kwargs(self):
+        kwargs = super().clone_kwargs() if hasattr(super(), 'clone_kwargs') else {}
+        kwargs.update({
+            'field_name': self.field_name,
+            'chooser': self.chooser,
+            'widget': getattr(self, 'widget', None),
+            'heading': self.heading,
+            'classname': self.classname,
+            'help_text': self.help_text,
+            'icon': getattr(self, 'icon', ''),
+            'disable_comments': getattr(self, 'disable_comments', None),
+            'permission': getattr(self, 'permission', None),
+        })
+        return kwargs
+
     def clone(self):
+        if hasattr(super(), 'clone_kwargs'):
+            return self.__class__(**self.clone_kwargs())
         return self.__class__(
             field_name=self.field_name,
-            widget=self.widget if hasattr(self, 'widget') else None,
+            widget=getattr(self, 'widget', None),
             heading=self.heading,
             classname=self.classname,
             help_text=self.help_text,

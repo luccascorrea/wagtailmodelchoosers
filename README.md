@@ -2,13 +2,13 @@
 
 A customizable and generic model chooser modal for the Wagtail admin interface, allowing content editors to pick any Django model instance (such as users, categories, or cities) or remote resources from an external API, instead of being limited to snippets or pages.
 
-*This project is a modified fork modernized to support **Wagtail 3.0+, 4.0+, 4.1+, and 4.2+ (LTS)**, **Django 4.0+**, and **Python 3.12+** with extensive automated test coverage.*
+*This project is a modified fork modernized to support **Wagtail 3.0+, 4.0+, 4.1+, 4.2+ (LTS), and 5.0+ (including 5.0.5)**, **Django 4.0+ / 4.2+ (LTS)**, and **Python 3.12+** with extensive automated test coverage.*
 
 ---
 
 ## Key Features & Upgrades in this Fork
 
-* **Wagtail 3.0+, 4.0+, 4.1+, and 4.2+ (LTS) Compatibility**: Fully supports modern Wagtail modular namespaces (e.g. `wagtail.models`, `wagtail.blocks`, `wagtail.admin.panels`, `wagtail.hooks`), `ReferenceIndex` reference tracking, Willow image pipelines, and new panel architectures while preserving backwards-compatible fallbacks for Wagtail 2.x projects.
+* **Wagtail 3.0+, 4.0+, 4.1+, 4.2+, and 5.0+ (5.0.5) Compatibility**: Fully supports modern Wagtail modular namespaces (e.g. `wagtail.models`, `wagtail.blocks`, `wagtail.admin.panels`, `wagtail.hooks`), dark mode theming and semantic CSS tokens, `ReferenceIndex` reference tracking, Willow image pipelines, and new panel architectures (`TitleFieldPanel`, `icon`, `clone_kwargs`) while preserving backwards-compatible fallbacks for Wagtail 2.x projects.
 * **Django 4.0+ Compatibility**: Handles routing updates (replaces deprecated `url()` imports with `re_path()`) and Django 4.x template escaping standards.
 * **Python 3.12+ Compatibility**: Resolves runtime `AttributeError` by replacing obsolete collections imports with `collections.abc.Iterable`.
 * **Automatic Primary Key Resolution**: The `pk_name` setting dynamically falls back to the model's actual primary key (`id`, `uuid`, etc.) rather than defaulting unconditionally to `'uuid'`.

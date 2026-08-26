@@ -3,9 +3,14 @@ from __future__ import absolute_import, unicode_literals
 from django.db import models
 
 try:
-    from wagtail.admin.panels import FieldPanel
+    from wagtail.admin.panels import FieldPanel, TitleFieldPanel
 except ImportError:
-    from wagtail.admin.edit_handlers import FieldPanel
+    try:
+        from wagtail.admin.panels import FieldPanel
+        TitleFieldPanel = FieldPanel
+    except ImportError:
+        from wagtail.admin.edit_handlers import FieldPanel
+        TitleFieldPanel = FieldPanel
 
 try:
     from wagtail.models import Page
@@ -28,7 +33,7 @@ class SimplePage(Page):
     )
 
     content_panels = [
-        FieldPanel('title', classname="full title"),
+        TitleFieldPanel('title', classname="full title"),
         FieldPanel('content'),
         ModelChooserPanel('selected_user', chooser='user_chooser'),
     ]
