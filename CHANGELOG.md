@@ -6,6 +6,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-08-26
+
+### Added
+- Official support for **Wagtail 5.0.5** and **Django 4.2 (LTS)**.
+- Enhanced `ModelChooserPanel` and `RemoteModelChooserPanel` to support `icon` and `base_form_class` parameters.
+- Implemented standard `clone_kwargs()` method on `ModelChooserPanel` and `RemoteModelChooserPanel` for seamless Wagtail panel cloning.
+- Added `TitleFieldPanel` support in `tests/testapp/` for title and slug synchronization with Stimulus `w-sync`.
+- Expanded test suite to **74 tests** verifying panel options (`icon`, `base_form_class`), cloning kwargs, and `ReferenceIndex` integration.
+- Added semantic surface tokens and CSS custom property fallbacks for dark mode compatibility in modal picker.
+- Added `wt50: wagtail>=5.0,<5.1` test environments in `tox.ini`.
+- Added PyPI classifier `Framework :: Wagtail :: 5` and updated package constraints to `'wagtail>=2.0,<6.0'`.
+
+### Changed
+- Removed deprecated `BASE_URL` setting from test application in favor of standard `WAGTAILADMIN_BASE_URL`.
+
+### Verified
+- Verified compatibility with Wagtail 5.0.5's complete removal of `wagtail.core` and `wagtail.admin.edit_handlers`.
+- Verified `extract_references()` behavior in `ModelChooserBlock` and `RemoteModelChooserBlock` under Wagtail 5.0's optimized `ReferenceIndex`.
+- Verified DRF API proxy views, serialization, and filtering under Wagtail 5.0.5 with 0 failures and 0 warnings.
+
+## [1.7.0] - 2026-08-20
+
 ### Added
 - Official compatibility and test coverage for **Wagtail 4.2.4 (LTS)**.
 - Expanded `tox.ini` matrix testing covering Wagtail 4.2 across Django 3.2, 4.0, 4.1, 4.2 and Python 3.8–3.12.
