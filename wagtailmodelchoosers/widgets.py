@@ -101,9 +101,24 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
         if not self.can_edit:
             return None
 
+        app, class_name = self.get_class_name()
+        model_name = class_name.lower()
+
+        # 1. Try Wagtail 5.1+ SnippetViewSet URL name: wagtailsnippets_<app>_<model>:edit
         try:
-            app, class_name = self.get_class_name()
-            return reverse('%s_%s_modeladmin_%s' % (app, class_name.lower(), "edit"), kwargs={"instance_pk": 0})
+            return reverse(f'wagtailsnippets_{app}_{model_name}:edit', args=[0])
+        except NoReverseMatch:
+            pass
+
+        # 2. Try generic Wagtail Snippet edit URL: wagtailsnippets:edit
+        try:
+            return reverse('wagtailsnippets:edit', args=[app, model_name, 0])
+        except NoReverseMatch:
+            pass
+
+        # 3. Fallback to legacy Wagtail ModelAdmin URL: <app>_<model>_modeladmin_edit
+        try:
+            return reverse(f'{app}_{model_name}_modeladmin_edit', kwargs={"instance_pk": 0})
         except NoReverseMatch:
             return None
 

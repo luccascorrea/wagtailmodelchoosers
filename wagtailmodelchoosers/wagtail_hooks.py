@@ -17,7 +17,7 @@ except ImportError:
 from wagtailmodelchoosers.views import FilterView, ModelView, RemoteResourceView
 
 
-@hooks.register('insert_editor_css')
+@hooks.register('insert_global_admin_css')
 def wagtailmodelchoosers_admin_css():
     return format_html(
         '<link rel="stylesheet" href="{}">',

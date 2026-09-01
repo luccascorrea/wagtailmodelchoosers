@@ -1,8 +1,10 @@
 from __future__ import absolute_import, unicode_literals
 
 import uuid
+from unittest.mock import patch
 
 from django.test import TestCase
+from django.urls.exceptions import NoReverseMatch
 
 try:
     from wagtail.models import Page
@@ -121,3 +123,98 @@ class TestModelChooserWidget(TestCase):
         widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
         html = widget.render_html('test', self.root_page, {})
         self.assertIn('<input type="hidden" value="2" name="test" >', html)
+
+    def test_get_edit_endpoint_can_edit_false(self):
+        opts = self.get_widget_options()
+        opts['can_edit'] = False
+        widget = widgets.ModelChooserWidget(Page, **opts)
+        self.assertIsNone(widget.get_edit_endpoint())
+
+    @patch('wagtailmodelchoosers.widgets.reverse')
+    def test_get_edit_endpoint_snippet_viewset(self, mock_reverse):
+        def fake_reverse(name, args=None, kwargs=None):
+            if name == 'wagtailsnippets_wagtailcore_page:edit':
+                return f'/admin/snippets/{args[0]}/'
+            raise NoReverseMatch()
+
+        mock_reverse.side_effect = fake_reverse
+        widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
+        self.assertEqual(widget.get_edit_endpoint(), '/admin/snippets/0/')
+
+    @patch('wagtailmodelchoosers.widgets.reverse')
+    def test_get_edit_endpoint_snippet_generic(self, mock_reverse):
+        def fake_reverse(name, args=None, kwargs=None):
+            if name == 'wagtailsnippets_wagtailcore_page:edit':
+                raise NoReverseMatch()
+            if name == 'wagtailsnippets:edit':
+                return f'/admin/snippets/{args[0]}/{args[1]}/{args[2]}/'
+            raise NoReverseMatch()
+
+        mock_reverse.side_effect = fake_reverse
+        widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
+        self.assertEqual(widget.get_edit_endpoint(), '/admin/snippets/wagtailcore/page/0/')
+
+    @patch('wagtailmodelchoosers.widgets.reverse')
+    def test_get_edit_endpoint_modeladmin_fallback(self, mock_reverse):
+        def fake_reverse(name, args=None, kwargs=None):
+            if name == 'wagtailcore_page_modeladmin_edit':
+                return f'/admin/modeladmin/{kwargs["instance_pk"]}/'
+            raise NoReverseMatch()
+
+        mock_reverse.side_effect = fake_reverse
+        widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
+        self.assertEqual(widget.get_edit_endpoint(), '/admin/modeladmin/0/')
+
+    @patch('wagtailmodelchoosers.widgets.reverse')
+    def test_get_edit_endpoint_none_when_all_fail(self, mock_reverse):
+        mock_reverse.side_effect = NoReverseMatch()
+        widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
+        self.assertIsNone(widget.get_edit_endpoint())
+
+
+class TestRemoteModelChooserWidget(TestCase):
+    def get_widget_options(self):
+        return {
+            'display': 'title',
+            'list_display': [{'name': 'title', 'label': 'Title'}],
+            'pk_name': 'id',
+            'chooser': 'remote_chooser',
+        }
+
+    def test_get_endpoint(self):
+        widget = widgets.RemoteModelChooserWidget(**self.get_widget_options())
+        self.assertEqual(widget.get_endpoint(), '/admin/modelchoosers/api/v1/remote_model/remote_chooser')
+
+    def test_get_display_value(self):
+        widget = widgets.RemoteModelChooserWidget(**self.get_widget_options())
+        self.assertEqual(widget.get_display_value({'title': 'Book 1'}), 'Book 1')
+        self.assertEqual(widget.get_display_value(None), '')
+
+    def test_get_internal_value(self):
+        widget = widgets.RemoteModelChooserWidget(**self.get_widget_options())
+        self.assertEqual(widget.get_internal_value({'id': 1}), '{"id": 1}')
+        self.assertEqual(widget.get_internal_value(None), '')
+
+    def test_get_value_data(self):
+        widget = widgets.RemoteModelChooserWidget(**self.get_widget_options())
+        self.assertEqual(widget.get_value_data('{"id": 1}'), {'id': 1})
+        self.assertEqual(widget.get_value_data('invalid json'), {})
+        self.assertEqual(widget.get_value_data({'id': 1}), {'id': 1})
+
+    def test_get_js_init_data(self):
+        widget = widgets.RemoteModelChooserWidget(**self.get_widget_options())
+        data = widget.get_js_init_data('field-remote', None, {'id': 1, 'title': 'Remote Title'})
+        self.assertEqual(data['label'], 'remote_chooser')
+        self.assertEqual(data['initial_display_value'], 'Remote Title')
+        self.assertEqual(data['endpoint'], '/admin/modelchoosers/api/v1/remote_model/remote_chooser')
+
+    def test_render_js_init(self):
+        widget = widgets.RemoteModelChooserWidget(**self.get_widget_options())
+        js_init = widget.render_js_init('field-remote', None, {'id': 1, 'title': 'Remote Title'})
+        self.assertIn('wagtailModelChoosers.initRemoteModelChooser(', js_init)
+
+    def test_render_html(self):
+        widget = widgets.RemoteModelChooserWidget(**self.get_widget_options())
+        html = widget.render_html('remote_field', {'id': 1, 'title': 'Remote Title'}, {})
+        self.assertIn('name="remote_field"', html)
+        self.assertIn('&quot;id&quot;: 1', html)
