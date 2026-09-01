@@ -6,6 +6,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-09-01
+
+### Added
+- Official support for **Wagtail 5.1.3** (and Wagtail 5.1.x series).
+- Added `read_only` and `attrs` support to `ModelChooserPanel` and `RemoteModelChooserPanel`.
+- Implemented `format_value_for_display(self, value)` on `ModelChooserPanel` and `RemoteModelChooserPanel` to support Wagtail 5.1 read-only panel rendering.
+- Enhanced `ModelChooserWidget.get_edit_endpoint()` to resolve modern `SnippetViewSet` URL patterns (`wagtailsnippets_<app>_<model>:edit` and `wagtailsnippets:edit`) prior to legacy ModelAdmin.
+- Added `wt51: wagtail>=5.1,<5.2` to `tox.ini` matrix.
+- Expanded test suite to **95 tests** with comprehensive test coverage for `read_only`, `attrs`, `format_value_for_display`, snippet edit URL routing, and admin hooks.
+
+### Changed
+- Migrated admin CSS injection hook in `wagtail_hooks.py` from deprecated `insert_editor_css` to `insert_global_admin_css` to eliminate `RemovedInWagtail60Warning`.
+
+### Verified
+- Verified 0 deprecation warnings emitted from `wagtailmodelchoosers` under Wagtail 5.1.3.
+- Verified test suite passes with 100% success rate across all 95 tests with 87% code coverage.
+
+
 ## [1.8.0] - 2026-08-26
 
 ### Added

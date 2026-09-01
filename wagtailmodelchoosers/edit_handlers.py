@@ -10,6 +10,7 @@ except ImportError:
         ChooserPanelParent = FieldPanel
 
 import collections
+import json
 
 from django.db import models
 from django.utils.html import escape
@@ -17,7 +18,7 @@ from wagtail.admin import compare
 from wagtail.admin.compare import ChildRelationComparison, FieldComparison, M2MFieldComparison
 from wagtail.utils.decorators import cached_classmethod
 
-from wagtailmodelchoosers.utils import curry, flatten, get_chooser_options
+from wagtailmodelchoosers.utils import curry, first_non_empty, flatten, get_chooser_options
 from wagtailmodelchoosers.widgets import ModelChooserWidget, RemoteModelChooserWidget
 
 try:
@@ -115,7 +116,6 @@ class ModelComparison(M2MFieldComparison):
 class ModelChooserPanel(ChooserPanelParent):
     object_type_name = 'model'
 
-
     def __init__(self, field_name, chooser, **kwargs):
         options = get_chooser_options(chooser)
         options.update(kwargs)
@@ -142,11 +142,15 @@ class ModelChooserPanel(ChooserPanelParent):
         panel_keys = (
             'heading', 'classname', 'help_text', 'widget',
             'disable_comments', 'permission', 'icon', 'base_form_class',
+            'read_only', 'attrs',
         )
         panel_options = {}
         for key in panel_keys:
             if key in options:
                 panel_options[key] = options.pop(key)
+
+        self.read_only = panel_options.get('read_only', False)
+        self.attrs = panel_options.get('attrs', {})
 
         super().__init__(field_name, **panel_options)
 
@@ -180,6 +184,9 @@ class ModelChooserPanel(ChooserPanelParent):
         }
 
     def get_form_options(self):
+        if getattr(self, 'read_only', False):
+            return {}
+
         if hasattr(super(), 'get_form_options'):
             opts = super().get_form_options()
         else:
@@ -201,6 +208,8 @@ class ModelChooserPanel(ChooserPanelParent):
             'icon': getattr(self, 'icon', ''),
             'disable_comments': getattr(self, 'disable_comments', None),
             'permission': getattr(self, 'permission', None),
+            'read_only': getattr(self, 'read_only', False),
+            'attrs': getattr(self, 'attrs', {}),
         })
         return kwargs
 
@@ -214,7 +223,28 @@ class ModelChooserPanel(ChooserPanelParent):
             classname=self.classname,
             help_text=self.help_text,
             chooser=self.chooser,
+            read_only=getattr(self, 'read_only', False),
+            attrs=getattr(self, 'attrs', {}),
         )
+
+    def format_value_for_display(self, value):
+        if value is None or value == '':
+            return ''
+
+        target_model = self.target_model() if hasattr(self, 'target_model') and self.target_model() else None
+
+        if target_model and not isinstance(value, target_model):
+            try:
+                instance = target_model.objects.filter(pk=value).first()
+                if instance is not None:
+                    value = instance
+            except Exception:
+                pass
+
+        if hasattr(value, '_meta') or isinstance(value, dict):
+            return first_non_empty(value, self.display, default=str(value))
+
+        return str(value)
 
 
 class BaseRemoteModelChooserPanel(ChooserPanelParent):
@@ -268,11 +298,15 @@ class RemoteModelChooserPanel(ChooserPanelParent):
         panel_keys = (
             'heading', 'classname', 'help_text', 'widget',
             'disable_comments', 'permission', 'icon', 'base_form_class',
+            'read_only', 'attrs',
         )
         panel_options = {}
         for key in panel_keys:
             if key in options:
                 panel_options[key] = options.pop(key)
+
+        self.read_only = panel_options.get('read_only', False)
+        self.attrs = panel_options.get('attrs', {})
 
         super().__init__(field_name, **panel_options)
 
@@ -298,6 +332,9 @@ class RemoteModelChooserPanel(ChooserPanelParent):
         }
 
     def get_form_options(self):
+        if getattr(self, 'read_only', False):
+            return {}
+
         if hasattr(super(), 'get_form_options'):
             opts = super().get_form_options()
         else:
@@ -319,6 +356,8 @@ class RemoteModelChooserPanel(ChooserPanelParent):
             'icon': getattr(self, 'icon', ''),
             'disable_comments': getattr(self, 'disable_comments', None),
             'permission': getattr(self, 'permission', None),
+            'read_only': getattr(self, 'read_only', False),
+            'attrs': getattr(self, 'attrs', {}),
         })
         return kwargs
 
@@ -332,4 +371,23 @@ class RemoteModelChooserPanel(ChooserPanelParent):
             classname=self.classname,
             help_text=self.help_text,
             chooser=self.chooser,
+            read_only=getattr(self, 'read_only', False),
+            attrs=getattr(self, 'attrs', {}),
         )
+
+    def format_value_for_display(self, value):
+        if value is None or value == '':
+            return ''
+
+        if isinstance(value, str):
+            try:
+                parsed = json.loads(value)
+                if isinstance(parsed, dict):
+                    value = parsed
+            except (ValueError, TypeError):
+                pass
+
+        if isinstance(value, dict):
+            return first_non_empty(value, self.display, default='')
+
+        return str(value)
