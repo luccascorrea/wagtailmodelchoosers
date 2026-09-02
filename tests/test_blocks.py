@@ -195,6 +195,20 @@ class TestStreamFieldReferenceExtraction(TestCase):
         )
         self.root_page.add_child(instance=self.child_page)
 
+    def test_stream_value_prep_and_python(self):
+        sb = StreamBlock([
+            ('model', blocks.ModelChooserBlock('core_page')),
+            ('remote', blocks.RemoteModelChooserBlock('remote_test')),
+        ])
+        raw = [
+            {'type': 'model', 'value': self.child_page.pk},
+            {'type': 'remote', 'value': {'id': 'ext-123', 'name': 'External Data'}},
+        ]
+        val = sb.to_python(raw)
+        prep = sb.get_prep_value(val)
+        self.assertEqual(prep[0]['value'], self.child_page.pk)
+        self.assertEqual(prep[1]['value'], {'id': 'ext-123', 'name': 'External Data'})
+
     def test_stream_block_extract_references(self):
         sb = StreamBlock([
             ('model', blocks.ModelChooserBlock('core_page')),
