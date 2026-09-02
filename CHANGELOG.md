@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-09-02
+
+### Added
+- Official support for **Wagtail 5.2.8 (LTS)** and the Wagtail 5.2.x series.
+- Added official support and PyPI classifier for **Django 5.0** (`Framework :: Django :: 5.0`).
+- Enhanced `ModelChooserWidget.get_edit_endpoint()` to resolve Wagtail 5.2 generic `ModelViewSet` edit routes (`<model_name>:edit`, `<app>_<model_name>:edit`) and Wagtail Page edit routes (`wagtailadmin_pages:edit`) for Page subclasses.
+- Expanded `django-filter` dependency ceiling in `setup.py` from `<=23.0` to `<25.0` to resolve packaging conflicts with Wagtail 5.2's requirement of `django-filter>=23.3,<24`.
+- Added `wt52: wagtail>=5.2,<5.3` and `dj50: Django>=5.0,<5.1` test environments to `tox.ini`.
+- Expanded automated test suite to **100 tests** covering `ModelViewSet` edit routes, Page edit routes, and StreamField values serialization with 0 failures and 0 warnings.
+
+### Verified
+- Verified compatibility with Wagtail 5.2.8 source code and release fixes (including CVE-2024-39317, StreamField null value migrations, and lazy block loading).
+- Verified full test suite passes with 100% success rate (100/100 tests) and 86% overall code coverage.
+
+
 ## [1.9.0] - 2026-09-01
 
 ### Added

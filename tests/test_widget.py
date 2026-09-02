@@ -11,7 +11,7 @@ try:
 except ImportError:
     from wagtail.core.models import Page
 
-from core.models import SimplePage
+from core.models import SimpleModel, SimplePage
 
 from wagtailmodelchoosers import widgets
 
@@ -91,12 +91,20 @@ class TestModelChooserWidget(TestCase):
             'has_list_filter': False,
             'adjustable_filter_type': False,
             'endpoint': '/admin/modelchoosers/api/v1/model/test_chooser',
-            'edit_endpoint': None,
+            'edit_endpoint': '/admin/pages/0/edit/',
             'filters_endpoint': '/admin/modelchoosers/api/v1/filters/test_chooser/',
             'pk_name': 'id',
         }
 
         self.assertEqual(data, expected_data)
+
+    def test_get_js_init_data_non_page_model(self):
+        opts = self.get_widget_options()
+        opts['chooser'] = 'custom_chooser'
+        widget = widgets.ModelChooserWidget(SimpleModel, **opts)
+        data = widget.get_js_init_data('field-2', None, None)
+        self.assertIsNone(data['edit_endpoint'])
+        self.assertEqual(data['label'], 'SimpleModel')
 
     def test_render_js_init(self):
         widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
@@ -153,6 +161,39 @@ class TestModelChooserWidget(TestCase):
         mock_reverse.side_effect = fake_reverse
         widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
         self.assertEqual(widget.get_edit_endpoint(), '/admin/snippets/wagtailcore/page/0/')
+
+    @patch('wagtailmodelchoosers.widgets.reverse')
+    def test_get_edit_endpoint_model_viewset_default_name(self, mock_reverse):
+        def fake_reverse(name, args=None, kwargs=None):
+            if name == 'page:edit':
+                return f'/admin/page/edit/{args[0]}/'
+            raise NoReverseMatch()
+
+        mock_reverse.side_effect = fake_reverse
+        widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
+        self.assertEqual(widget.get_edit_endpoint(), '/admin/page/edit/0/')
+
+    @patch('wagtailmodelchoosers.widgets.reverse')
+    def test_get_edit_endpoint_model_viewset_app_prefixed(self, mock_reverse):
+        def fake_reverse(name, args=None, kwargs=None):
+            if name == 'wagtailcore_page:edit':
+                return f'/admin/wagtailcore_page/edit/{args[0]}/'
+            raise NoReverseMatch()
+
+        mock_reverse.side_effect = fake_reverse
+        widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
+        self.assertEqual(widget.get_edit_endpoint(), '/admin/wagtailcore_page/edit/0/')
+
+    @patch('wagtailmodelchoosers.widgets.reverse')
+    def test_get_edit_endpoint_page_subclass(self, mock_reverse):
+        def fake_reverse(name, args=None, kwargs=None):
+            if name == 'wagtailadmin_pages:edit':
+                return f'/admin/pages/{args[0]}/edit/'
+            raise NoReverseMatch()
+
+        mock_reverse.side_effect = fake_reverse
+        widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
+        self.assertEqual(widget.get_edit_endpoint(), '/admin/pages/0/edit/')
 
     @patch('wagtailmodelchoosers.widgets.reverse')
     def test_get_edit_endpoint_modeladmin_fallback(self, mock_reverse):

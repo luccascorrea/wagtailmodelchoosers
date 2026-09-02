@@ -116,7 +116,38 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
         except NoReverseMatch:
             pass
 
-        # 3. Fallback to legacy Wagtail ModelAdmin URL: <app>_<model>_modeladmin_edit
+        # 3. Try Wagtail 5.2+ ModelViewSet URL names: <model_name>:edit or <app>_<model_name>:edit
+        try:
+            return reverse(f'{model_name}:edit', args=[0])
+        except NoReverseMatch:
+            pass
+
+        try:
+            return reverse(f'{app}_{model_name}:edit', args=[0])
+        except NoReverseMatch:
+            pass
+
+        # 4. Try Wagtail Page edit URL if target model is a Page subclass
+        if self.target_model and hasattr(self.target_model, '_meta'):
+            try:
+                from wagtail.models import Page
+                if issubclass(self.target_model, Page):
+                    try:
+                        return reverse('wagtailadmin_pages:edit', args=[0])
+                    except NoReverseMatch:
+                        pass
+            except ImportError:
+                try:
+                    from wagtail.core.models import Page
+                    if issubclass(self.target_model, Page):
+                        try:
+                            return reverse('wagtailadmin_pages:edit', args=[0])
+                        except NoReverseMatch:
+                            pass
+                except ImportError:
+                    pass
+
+        # 5. Fallback to legacy Wagtail ModelAdmin URL: <app>_<model>_modeladmin_edit
         try:
             return reverse(f'{app}_{model_name}_modeladmin_edit', kwargs={"instance_pk": 0})
         except NoReverseMatch:
