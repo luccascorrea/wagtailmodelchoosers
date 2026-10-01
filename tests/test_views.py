@@ -1,7 +1,9 @@
 from unittest.mock import MagicMock, patch
 
+import django
 from core.models import SimpleModel
 from django.contrib.auth import get_user_model
+from django.db import models
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -260,3 +262,39 @@ class TestViews(TestCase):
         data = response.json()
         self.assertEqual(data['status_code'], 404)
         self.assertIn("404 Client Error", data['detail'])
+
+    def test_model_view_with_headers_parameter(self):
+        url = reverse('wagtailmodelchoosers_api_model', kwargs={'chooser': 'simple_model_chooser'})
+        if django.VERSION >= (4, 2):
+            response = self.client.get(
+                url,
+                headers={'accept': 'application/json', 'x-requested-with': 'XMLHttpRequest'}
+            )
+        else:
+            response = self.client.get(
+                url,
+                HTTP_ACCEPT='application/json',
+                HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+            )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['count'], 2)
+
+    def test_build_serializer_with_db_comment_field(self):
+        from wagtailmodelchoosers.views import ModelView
+        view = ModelView()
+        mock_request = MagicMock()
+        mock_request.parser_context = {'kwargs': {'chooser': 'simple_model_chooser'}}
+        view.request = mock_request
+        view.format_kwarg = None
+
+        # Verify dynamic serializer builder works cleanly with models having fields
+        serializer_cls = view.build_serializer(SimpleModel, 'SimpleModel')
+        serializer = serializer_cls(self.model_cool_draft)
+        self.assertEqual(serializer.data['name'], 'cool draft model')
+        self.assertEqual(serializer.data['is_cool'], True)
+
+        # On Django 4.2+, test db_comment attribute on model fields
+        if django.VERSION >= (4, 2):
+            field = models.CharField(max_length=255, db_comment="A commented field")
+            self.assertEqual(field.db_comment, "A commented field")

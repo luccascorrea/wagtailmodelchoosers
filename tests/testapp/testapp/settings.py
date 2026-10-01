@@ -2,6 +2,7 @@ from __future__ import absolute_import, unicode_literals
 
 import os
 
+import django
 import wagtail
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -125,6 +126,16 @@ STATIC_URL = '/static/'
 
 MEDIA_ROOT = os.path.join(PROJECT_DIR, 'var', 'media')
 MEDIA_URL = '/media/'
+
+if django.VERSION >= (4, 2):
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
 
 
 # Wagtail settings
