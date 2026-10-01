@@ -8,7 +8,7 @@ try:
 except ImportError:
     from wagtail.core.models import Page
 
-from core.models import SimplePage
+from core.models import SimpleModel, SimplePage
 
 from wagtailmodelchoosers.edit_handlers import (
     ChildModelComparison,
@@ -330,3 +330,31 @@ class TestComparisons(TestCase):
         child_comp = ChildModelComparison(field, [], obj_a, obj_b)
         self.assertEqual(list(child_comp.val_a), ['a1', 'a2'])
         self.assertEqual(list(child_comp.val_b), ['b1'])
+
+    def test_model_comparison_with_unsaved_instances(self):
+        User = get_user_model()
+        # Unsaved instances have pk=None
+        user_unsaved_a = User(username='unsaved_a')
+        user_unsaved_b = User(username='unsaved_b')
+
+        rel = SimpleModel._meta.get_field('owner').remote_field
+        self.assertTrue(isinstance(rel, models.ManyToOneRel))
+
+        # In Django 4.1+, accessing .all() on a reverse relation of an unsaved model raises ValueError.
+        # Defensive handling ensures val_a and val_b gracefully evaluate to empty lists without crashing.
+        comparison = ModelComparison(rel, user_unsaved_a, user_unsaved_b)
+        self.assertEqual(comparison.val_a, [])
+        self.assertEqual(comparison.val_b, [])
+
+    def test_child_model_comparison_with_unsaved_instances(self):
+        User = get_user_model()
+        user_unsaved_a = User(username='unsaved_a')
+        user_unsaved_b = User(username='unsaved_b')
+
+        class MockRelField:
+            def get_accessor_name(self):
+                return 'simplemodel_set'
+
+        comparison = ChildModelComparison(MockRelField(), [], user_unsaved_a, user_unsaved_b)
+        self.assertEqual(comparison.val_a, [])
+        self.assertEqual(comparison.val_b, [])

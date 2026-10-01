@@ -72,8 +72,14 @@ class ChildModelComparison(ChildRelationComparison):
         self.field = field
         self.field_comparisons = field_comparisons
         accessor = field.get_accessor_name()
-        self.val_a = getattr(obj_a, accessor).all()
-        self.val_b = getattr(obj_b, accessor).all()
+        try:
+            self.val_a = getattr(obj_a, accessor).all() if getattr(obj_a, 'pk', 1) is not None else []
+        except ValueError:
+            self.val_a = []
+        try:
+            self.val_b = getattr(obj_b, accessor).all() if getattr(obj_b, 'pk', 1) is not None else []
+        except ValueError:
+            self.val_b = []
 
 
 class ModelComparison(M2MFieldComparison):
@@ -81,8 +87,14 @@ class ModelComparison(M2MFieldComparison):
         if isinstance(field, models.ManyToOneRel):
             self.field = field
             accessor = field.get_accessor_name()
-            self.val_a = getattr(obj_a, accessor).all()
-            self.val_b = getattr(obj_b, accessor).all()
+            try:
+                self.val_a = getattr(obj_a, accessor).all() if getattr(obj_a, 'pk', 1) is not None else []
+            except ValueError:
+                self.val_a = []
+            try:
+                self.val_b = getattr(obj_b, accessor).all() if getattr(obj_b, 'pk', 1) is not None else []
+            except ValueError:
+                self.val_b = []
         else:
             super().__init__(field, obj_a, obj_b)
 
