@@ -7,10 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Official verification and support for **Django 4.2.30 (LTS)** (security release of the Django 4.2 series).
+- Added conditional `STORAGES` dictionary in `tests/testapp/testapp/settings.py` for `django.VERSION >= (4, 2)` to eliminate `RemovedInDjango51Warning` when running tests on Django 4.2+.
+- Added unit tests for Django 4.2 `client.get(..., headers={...})` request header handling and `db_comment` field attributes, expanding the test suite to **108 tests** with 0 failures and 0 errors.
 - Official verification and support for **Django 4.1.13** (final release of the Django 4.1 series).
 - Added defensive handling in `ModelComparison` and `ChildModelComparison` when comparing unsaved model instances, gracefully returning empty collections rather than raising `ValueError` on reverse foreign key descriptors.
 - Upgraded `FilterView` to safely resolve related model primary keys via `getattr(option, 'pk', getattr(option, 'id', None))` rather than assuming `option.id`.
-- Added unit tests for unsaved model comparisons, `div.html` form rendering, and `use_fieldset` widget attributes, expanding the test suite to **106 tests** with 0 failures and 0 warnings.
+- Added unit tests for unsaved model comparisons, `div.html` form rendering, and `use_fieldset` widget attributes.
 
 ## [1.10.0] - 2026-09-02
 
