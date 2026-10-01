@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 import uuid
 from unittest.mock import patch
 
+from django import forms
 from django.test import TestCase
 from django.urls.exceptions import NoReverseMatch
 
@@ -212,6 +213,20 @@ class TestModelChooserWidget(TestCase):
         widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
         self.assertIsNone(widget.get_edit_endpoint())
 
+    def test_widget_use_fieldset(self):
+        widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
+        self.assertFalse(getattr(widget, 'use_fieldset', True))
+
+    def test_form_rendering_div_format(self):
+        class ChooserForm(forms.Form):
+            target = forms.CharField(widget=widgets.ModelChooserWidget(Page, **self.get_widget_options()))
+
+        form = ChooserForm()
+        if hasattr(form, 'as_div'):
+            html = form.as_div()
+            self.assertIn('data-model-chooser-mount', html)
+            self.assertIn('name="target"', html)
+
 
 class TestRemoteModelChooserWidget(TestCase):
     def get_widget_options(self):
@@ -259,3 +274,17 @@ class TestRemoteModelChooserWidget(TestCase):
         html = widget.render_html('remote_field', {'id': 1, 'title': 'Remote Title'}, {})
         self.assertIn('name="remote_field"', html)
         self.assertIn('&quot;id&quot;: 1', html)
+
+    def test_remote_widget_use_fieldset(self):
+        widget = widgets.RemoteModelChooserWidget(**self.get_widget_options())
+        self.assertFalse(getattr(widget, 'use_fieldset', True))
+
+    def test_remote_form_rendering_div_format(self):
+        class RemoteChooserForm(forms.Form):
+            remote = forms.CharField(widget=widgets.RemoteModelChooserWidget(**self.get_widget_options()))
+
+        form = RemoteChooserForm()
+        if hasattr(form, 'as_div'):
+            html = form.as_div()
+            self.assertIn('data-remote-model-chooser-mount', html)
+            self.assertIn('name="remote"', html)

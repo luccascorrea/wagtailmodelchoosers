@@ -96,6 +96,8 @@ class TestViews(TestCase):
         # All + 2 users
         self.assertEqual(len(owner_filter['options']), 3)
         self.assertEqual(owner_filter['options'][0], {'label': 'All', 'value': None, 'selected': True})
+        owner_pks = {opt['value'] for opt in owner_filter['options'][1:]}
+        self.assertEqual(owner_pks, {self.user.pk, self.user2.pk})
 
         # Check is_cool filter (BooleanField)
         is_cool_filter = next(f for f in data if f['name'] == 'is_cool')

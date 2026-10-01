@@ -43,7 +43,10 @@ class FilterView(APIView):
             field = model_class._meta.get_field(field)
             if isinstance(field, RelatedField):
                 instances = field.related_model.objects.all()
-                options = [{"label": str(option), "value": option.id} for option in instances]
+                options = [
+                    {"label": str(option), "value": getattr(option, "pk", getattr(option, "id", None))}
+                    for option in instances
+                ]
                 item["options"] = [{"label": "All", "value": None, "selected": True}] + options
                 response.append(item)
             elif isinstance(field, BooleanField):
