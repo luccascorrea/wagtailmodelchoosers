@@ -2,17 +2,17 @@
 
 A customizable and generic model chooser modal for the Wagtail admin interface, allowing content editors to pick any Django model instance (such as users, categories, or cities) or remote resources from an external API, instead of being limited to snippets or pages.
 
-*This project is a modified fork modernized to support **Wagtail 3.0+, 4.0+, 4.1+, 4.2+ (LTS), 5.0+, 5.1+, and 5.2+ (including 5.2.8 LTS)**, **Django 4.0+, 4.1.13, 4.2+ (LTS, including 4.2.30), and 5.0+**, and **Python 3.12+** with extensive automated test coverage.*
+*This project is a modified fork modernized to support **Wagtail 3.0+, 4.0+, 4.1+, 4.2+ (LTS), 5.0+, 5.1+, and 5.2+ (including 5.2.8 LTS)**, **Django 4.0+, 4.1.13, 4.2+ (LTS, including 4.2.30), and 5.0+ (specifically validated on 5.0.14)**, and **Python 3.12+** with extensive automated test coverage.*
 
 ---
 
 ## Key Features & Upgrades in this Fork
 
 * **Wagtail 3.0+, 4.0+, 4.1+, 4.2+, 5.0+, 5.1+, and 5.2+ (5.2.8 LTS) Compatibility**: Fully supports modern Wagtail modular namespaces (e.g. `wagtail.models`, `wagtail.blocks`, `wagtail.admin.panels`, `wagtail.hooks`), `read_only` and `attrs` panel options, `SnippetViewSet` and generic `ModelViewSet` URL resolution, dark mode theming and semantic CSS tokens, `ReferenceIndex` reference tracking, Willow image pipelines, and new panel architectures (`TitleFieldPanel`, `icon`, `clone_kwargs`) while preserving backwards-compatible fallbacks for Wagtail 2.x projects.
-* **Django 4.0+, 4.1.13, 4.2+ (LTS, including 4.2.30), and 5.0+ Compatibility**: Handles routing updates (replaces deprecated `url()` imports with `re_path()`), safe primary key resolution, defensive reverse relation handling on unsaved instances, `STORAGES` configuration, and modern Django form and template rendering standards.
+* **Django 4.0+, 4.1.13, 4.2+ (LTS, including 4.2.30), and 5.0+ (5.0.14) Compatibility**: Handles routing updates (replaces deprecated `url()` imports with `re_path()`), safe primary key resolution, defensive reverse relation handling on unsaved instances, `STORAGES` configuration, defensive choices handling in `FilterView`, sanitized HTML attribute formatting adhering to CVE-2024-53907, and dynamic `GeneratedField` / `db_default` serialization.
 * **Python 3.12+ Compatibility**: Resolves runtime `AttributeError` by replacing obsolete collections imports with `collections.abc.Iterable`.
 * **Automatic Primary Key Resolution**: The `pk_name` setting dynamically falls back to the model's actual primary key (`id`, `uuid`, etc.) rather than defaulting unconditionally to `'uuid'`.
-* **Extensive Test Coverage**: Automated test suite expanded to **108 tests** covering 100% of major logic paths, achieving **86% overall coverage** (>95% for views and >94% for utility helpers).
+* **Extensive Test Coverage**: Automated test suite expanded to **112 tests** covering 100% of major logic paths, achieving **86% overall coverage** (>95% for views and >94% for utility helpers).
 
 ---
 

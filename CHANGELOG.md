@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Official verification and support for **Django 5.0.14** (security release of the Django 5.0 series).
+- Added defensive check in `FilterView` (`getattr(field, 'choices', None)`) ensuring fields with `choices=None` do not trigger `TypeError` when queried.
+- Hardened `html_attributes` template filter to escape attribute keys (`conditional_escape(strip_tags(key))`) adhering to Django 5.0.10's CVE-2024-53907 security guidance.
+- Expanded automated test suite to **112 tests** (100% pass rate) with test cases covering Django 5.0 callable/dynamic choices, defensive choices handling, `GeneratedField` dynamic serializer building, and attribute key escaping.
 - Official verification and support for **Django 4.2.30 (LTS)** (security release of the Django 4.2 series).
 - Added conditional `STORAGES` dictionary in `tests/testapp/testapp/settings.py` for `django.VERSION >= (4, 2)` to eliminate `RemovedInDjango51Warning` when running tests on Django 4.2+.
 - Added unit tests for Django 4.2 `client.get(..., headers={...})` request header handling and `db_comment` field attributes, expanding the test suite to **108 tests** with 0 failures and 0 errors.

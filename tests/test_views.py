@@ -55,7 +55,15 @@ TEST_MODEL_CHOOSERS_OPTIONS = {
         'filters': [
             {'field': 'category', 'label': 'Category'},
         ],
-    }
+    },
+    'field_without_choices_chooser': {
+        'content_type': 'core.SimpleModel',
+        'display': 'name',
+        'list_display': [{'name': 'name', 'label': 'Name'}],
+        'list_filter': [
+            {'name': 'name', 'label': 'Name Filter'},
+        ],
+    },
 }
 
 
@@ -298,3 +306,57 @@ class TestViews(TestCase):
         if django.VERSION >= (4, 2):
             field = models.CharField(max_length=255, db_comment="A commented field")
             self.assertEqual(field.db_comment, "A commented field")
+
+    def test_filter_view_field_without_choices_does_not_crash(self):
+        url = reverse('wagtailmodelchoosers_api_filters', kwargs={'chooser': 'field_without_choices_chooser'})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        # name field has choices=None, so it shouldn't produce filter options or crash with TypeError
+        self.assertEqual(len(data), 0)
+
+    def test_filter_view_callable_choices(self):
+        # Test Django 5.0+ callable or dynamic choices in FilterView
+        class MockChoicesField:
+            def __init__(self, choices):
+                self.choices = choices
+
+        def callable_choices():
+            return [('alpha', 'Alpha Option'), ('beta', 'Beta Option')]
+
+        # Test iterating over callable choices generator / iterator
+        with patch.object(SimpleModel._meta, 'get_field', return_value=MockChoicesField(callable_choices())):
+            url = reverse('wagtailmodelchoosers_api_filters', kwargs={'chooser': 'field_without_choices_chooser'})
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(len(data), 1)
+            options = data[0]['options']
+            self.assertEqual(options[0], {'label': 'All', 'value': None, 'selected': True})
+            self.assertEqual(options[1], {'label': 'Alpha Option', 'value': 'alpha'})
+            self.assertEqual(options[2], {'label': 'Beta Option', 'value': 'beta'})
+
+    def test_build_serializer_with_generated_field(self):
+        from wagtailmodelchoosers.views import ModelView
+        view = ModelView()
+        mock_request = MagicMock()
+        mock_request.parser_context = {'kwargs': {'chooser': 'simple_model_chooser'}}
+        view.request = mock_request
+        view.format_kwarg = None
+
+        if hasattr(models, 'GeneratedField'):
+            class GeneratedMockModel(models.Model):
+                name = models.CharField(max_length=50)
+                gen_name = models.GeneratedField(
+                    expression=models.F('name'),
+                    output_field=models.CharField(max_length=50),
+                    db_persist=True
+                )
+
+                class Meta:
+                    app_label = 'core'
+
+            serializer_cls = view.build_serializer(GeneratedMockModel, 'GeneratedMockModel')
+            self.assertIn('gen_name', serializer_cls.Meta.fields)
+            serializer = serializer_cls()
+            self.assertIn('gen_name', serializer.fields)

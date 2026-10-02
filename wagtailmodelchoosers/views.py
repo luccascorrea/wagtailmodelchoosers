@@ -57,7 +57,7 @@ class FilterView(APIView):
                 ]
                 item["options"] = options
                 response.append(item)
-            elif hasattr(field, "choices"):
+            elif getattr(field, "choices", None):
                 options = [{"label": option[1], "value": option[0]} for option in field.choices]
                 item["options"] = [{"label": "All", "value": None, "selected": True}] + options
                 response.append(item)

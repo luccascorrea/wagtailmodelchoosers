@@ -66,3 +66,10 @@ class HTMLAttributesTestCase(TestCase):
     def test_html_attributes_escapes_values(self):
         attrs = {'value': '<>&\'"'}
         self.assertIn(html_attributes(attrs), ('value="&lt;&gt;&amp;&#39;&quot;"', 'value="&lt;&gt;&amp;&#x27;&quot;"'))
+
+    def test_html_attributes_escapes_special_characters_in_keys(self):
+        attrs = {'data-"test"': 'value', 'bad<key>': True}
+        output = html_attributes(attrs)
+        self.assertIn('data-&quot;test&quot;="value"', output)
+        self.assertIn('bad', output)
+        self.assertNotIn('<key>', output)

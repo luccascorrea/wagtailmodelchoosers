@@ -30,13 +30,15 @@ def html_attributes(attrs, exclude=None):
         if key.lower() in exclude:
             continue
 
+        safe_key = conditional_escape(strip_tags(key))
+
         # Only include boolean values if `True`, and only add the attribute name (no value) as per HTML specs.
         if isinstance(val, bool):
             if val:
-                html_attrs.append(strip_tags(key))
+                html_attrs.append(safe_key)
 
         # Other attributes, display normally.
         else:
-            html_attrs.append('{key}="{val}"'.format(key=strip_tags(key), val=conditional_escape(val)))
+            html_attrs.append('{key}="{val}"'.format(key=safe_key, val=conditional_escape(val)))
 
     return mark_safe(' '.join(html_attrs))
