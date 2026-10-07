@@ -26,6 +26,7 @@ def wagtailmodelchoosers_admin_css():
 
 
 @hooks.register('insert_editor_js')
+@hooks.register('insert_global_admin_js')
 def wagtailmodelchoosers_admin_js():
     js_files = (
         'wagtailmodelchoosers/wagtailmodelchoosers.js',

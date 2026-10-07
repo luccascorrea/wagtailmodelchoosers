@@ -2,19 +2,70 @@ import json
 import uuid
 
 from django.apps import apps
-from django.forms import widgets
+from django.forms import Media, widgets
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from django.utils.functional import cached_property
-from wagtail.utils.widgets import WidgetWithScript
+from django.utils.safestring import mark_safe
 
 from .utils import first_non_empty
 
 
-class ModelChooserWidget(WidgetWithScript, widgets.Input):
+class BaseWidgetWithScript(widgets.Widget):
+    """
+    Drop-in compatibility base class replacing wagtail.utils.widgets.WidgetWithScript.
+    Avoids RemovedInWagtail70Warning in Wagtail 6.x and prevents breakages in Wagtail 7.0+.
+    """
+
+    def render_html(self, name, value, attrs):
+        """Render the HTML (non-JS) portion of the field markup"""
+        if getattr(self, 'template_name', None):
+            return super().render(name, value, attrs)
+        return ""
+
+    def get_value_data(self, value):
+        return value
+
+    def render(self, name, value, attrs=None, renderer=None):
+        try:
+            id_ = attrs["id"]
+        except (KeyError, TypeError):
+            raise TypeError(
+                "WidgetWithScript cannot be rendered without an 'id' attribute"
+            )
+
+        value_data = self.get_value_data(value)
+        widget_html = self.render_html(name, value_data, attrs)
+
+        js = self.render_js_init(id_, name, value_data)
+        out = f"{widget_html}<script>{js}</script>"
+        return mark_safe(out)
+
+    def render_js_init(self, id_, name, value):
+        return ""
+
+
+WidgetWithScript = BaseWidgetWithScript
+
+
+class ModelChooserWidget(BaseWidgetWithScript, widgets.Input):
     is_hidden = True
     template_name = 'wagtailmodelchoosers/widgets/model_chooser.html'
+
+    @property
+    def media(self):
+        return Media(
+            js=[
+                'wagtailmodelchoosers/wagtailmodelchoosers.js',
+                'wagtailmodelchoosers/polyfills.js',
+            ],
+            css={
+                'all': [
+                    'wagtailmodelchoosers/wagtailmodelchoosers.css',
+                ]
+            }
+        )
 
     def __init__(
         self,
@@ -236,9 +287,23 @@ class ModelChooserWidget(WidgetWithScript, widgets.Input):
         return render_to_string(self.template_name, context)
 
 
-class RemoteModelChooserWidget(WidgetWithScript, widgets.Input):
+class RemoteModelChooserWidget(BaseWidgetWithScript, widgets.Input):
     is_hidden = True
     template_name = 'wagtailmodelchoosers/widgets/remote_model_chooser.html'
+
+    @property
+    def media(self):
+        return Media(
+            js=[
+                'wagtailmodelchoosers/wagtailmodelchoosers.js',
+                'wagtailmodelchoosers/polyfills.js',
+            ],
+            css={
+                'all': [
+                    'wagtailmodelchoosers/wagtailmodelchoosers.css',
+                ]
+            }
+        )
 
     def __init__(self, chooser, display, list_display, required=True, **kwargs):
         self.required = required

@@ -99,6 +99,31 @@ class TestModelChooserWidget(TestCase):
 
         self.assertEqual(data, expected_data)
 
+    def test_model_chooser_widget_media(self):
+        widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
+        media = widget.media
+        self.assertIn('wagtailmodelchoosers/wagtailmodelchoosers.js', media._js)
+        self.assertIn('wagtailmodelchoosers/polyfills.js', media._js)
+        self.assertIn('wagtailmodelchoosers/wagtailmodelchoosers.css', media._css['all'])
+
+    def test_base_widget_with_script_features(self):
+        base_widget = widgets.BaseWidgetWithScript()
+        self.assertEqual(base_widget.get_value_data("foo"), "foo")
+        self.assertEqual(base_widget.render_js_init("id", "name", "foo"), "")
+
+        # Render without id in attrs raises TypeError
+        with self.assertRaises(TypeError):
+            base_widget.render("name", "val", attrs={})
+
+        rendered = base_widget.render("name", "val", attrs={"id": "elem_id"})
+        self.assertIn("<script></script>", rendered)
+
+    def test_widget_with_script_alias(self):
+        self.assertIs(widgets.WidgetWithScript, widgets.BaseWidgetWithScript)
+        widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
+        self.assertIsInstance(widget, widgets.BaseWidgetWithScript)
+        self.assertIsInstance(widget, widgets.WidgetWithScript)
+
     def test_get_js_init_data_non_page_model(self):
         opts = self.get_widget_options()
         opts['chooser'] = 'custom_chooser'
@@ -288,3 +313,10 @@ class TestRemoteModelChooserWidget(TestCase):
             html = form.as_div()
             self.assertIn('data-remote-model-chooser-mount', html)
             self.assertIn('name="remote"', html)
+
+    def test_remote_model_chooser_widget_media(self):
+        widget = widgets.RemoteModelChooserWidget(**self.get_widget_options())
+        media = widget.media
+        self.assertIn('wagtailmodelchoosers/wagtailmodelchoosers.js', media._js)
+        self.assertIn('wagtailmodelchoosers/polyfills.js', media._js)
+        self.assertIn('wagtailmodelchoosers/wagtailmodelchoosers.css', media._css['all'])

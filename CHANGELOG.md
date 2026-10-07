@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Official verification and support for **Wagtail 6.0.6** (and Wagtail 6.0.x series).
+- Updated `install_requires` in `setup.py` to `wagtail>=2.0,<7.0` and added `Framework :: Wagtail :: 6` classifier.
+- Introduced `BaseWidgetWithScript` compatibility shim in `wagtailmodelchoosers/widgets.py` replacing direct import of `wagtail.utils.widgets.WidgetWithScript` to eliminate `RemovedInWagtail70Warning` and future-proof against Wagtail 7.0 removals.
+- Added standard `media` property to `ModelChooserWidget` and `RemoteModelChooserWidget` containing required CSS and JS bundles to ensure seamless script loading across all admin contexts (including generic `ModelViewSet` and snippets).
+- Added `search_index` kwarg support and `get_searchable_content()` method on `ModelChooserBlock` and `RemoteModelChooserBlock` for Wagtail 6.0 StreamField search indexing.
+- Registered `wagtailmodelchoosers_admin_js` with `insert_global_admin_js` hook in addition to `insert_editor_js` to ensure chooser assets are loaded in all Wagtail admin views.
+- Added `wt60` test environments to `tox.ini` covering Python 3.8–3.12 with Django 4.2 and Django 5.0.
+- Expanded automated test suite to **119 tests** (100% pass rate) with test cases covering widget `media`, `BaseWidgetWithScript` rendering, StreamField `search_index` options, block searchable content extraction, and admin JS hook registration.
 - Official verification and support for **Django 5.0.14** (security release of the Django 5.0 series).
 - Added defensive check in `FilterView` (`getattr(field, 'choices', None)`) ensuring fields with `choices=None` do not trigger `TypeError` when queried.
 - Hardened `html_attributes` template filter to escape attribute keys (`conditional_escape(strip_tags(key))`) adhering to Django 5.0.10's CVE-2024-53907 security guidance.
