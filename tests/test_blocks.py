@@ -138,6 +138,19 @@ class TestModelChooserBlock(TestCase):
         refs = list(block.extract_references(None))
         self.assertEqual(refs, [])
 
+    def test_search_index_option_and_content(self):
+        block_default = blocks.ModelChooserBlock('core_page')
+        self.assertTrue(getattr(block_default, 'search_index', True))
+        content = block_default.get_searchable_content(self.child_page)
+        self.assertEqual(content, [self.child_page.title])
+
+        block_no_index = blocks.ModelChooserBlock('core_page', search_index=False)
+        self.assertFalse(block_no_index.search_index)
+        content_empty = block_no_index.get_searchable_content(self.child_page)
+        self.assertEqual(content_empty, [])
+
+        self.assertEqual(block_default.get_searchable_content(None), [])
+
 
 @override_settings(MODEL_CHOOSERS_OPTIONS=TEST_MODEL_CHOOSERS_OPTIONS)
 class TestRemoteModelChooserBlock(TestCase):
@@ -183,6 +196,16 @@ class TestRemoteModelChooserBlock(TestCase):
         self.assertEqual(list(block.extract_references(None)), [])
         self.assertEqual(list(block.extract_references({'id': 1, 'name': 'foo'})), [])
         self.assertEqual(list(block.extract_references('{"id": 1, "name": "foo"}')), [])
+
+    def test_search_index_option_and_content(self):
+        block_default = blocks.RemoteModelChooserBlock('remote_test')
+        self.assertTrue(getattr(block_default, 'search_index', True))
+        self.assertEqual(block_default.get_searchable_content({'name': 'Remote Value'}), ['Remote Value'])
+
+        block_no_index = blocks.RemoteModelChooserBlock('remote_test', search_index=False)
+        self.assertFalse(block_no_index.search_index)
+        self.assertEqual(block_no_index.get_searchable_content({'name': 'Remote Value'}), [])
+        self.assertEqual(block_default.get_searchable_content(None), [])
 
 
 @override_settings(MODEL_CHOOSERS_OPTIONS=TEST_MODEL_CHOOSERS_OPTIONS)

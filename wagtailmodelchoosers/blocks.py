@@ -31,6 +31,7 @@ class ModelChooserBlock(ChooserBlock):
         self.page_size = options.pop('page_size', None)
         self.pk_name = options.pop('pk_name', 'uuid')
         self.translations = options.pop('translations', [])
+        self.search_index = options.pop('search_index', kwargs.get('search_index', True))
 
         super(ModelChooserBlock, self).__init__(**kwargs)
 
@@ -96,6 +97,12 @@ class ModelChooserBlock(ChooserBlock):
     def render_basic(self, value, context=None):
         return first_non_empty(value, self.display, default='')
 
+    def get_searchable_content(self, value):
+        if not getattr(self, 'search_index', True):
+            return []
+        text = self.render_basic(value)
+        return [str(text)] if text else []
+
     def extract_references(self, value):
         if value is not None:
             pk = value.pk if isinstance(value, self.target_model) else value
@@ -121,6 +128,7 @@ class RemoteModelChooserBlock(ChooserBlock):
         self.fields_to_save = options.pop('fields_to_save', None)
         self.pk_name = options.pop('pk_name', 'uuid')
         self.translations = options.pop('translations', [])
+        self.search_index = options.pop('search_index', kwargs.get('search_index', True))
 
         super(RemoteModelChooserBlock, self).__init__(**options)
 
@@ -185,6 +193,12 @@ class RemoteModelChooserBlock(ChooserBlock):
             value = self.to_python(value)
 
         return first_non_empty(value, self.display, default='')
+
+    def get_searchable_content(self, value):
+        if not getattr(self, 'search_index', True):
+            return []
+        text = self.render_basic(value)
+        return [str(text)] if text else []
 
     def clean(self, value):
         return value

@@ -26,3 +26,13 @@ class TestWagtailHooks(TestCase):
         self.assertIn('wagtailmodelchoosers_api_model', url_names)
         self.assertIn('wagtailmodelchoosers_api_filters', url_names)
         self.assertIn('wagtailmodelchoosers_api_remote_model', url_names)
+
+    def test_admin_js_registered_hooks(self):
+        try:
+            from wagtail import hooks
+        except ImportError:
+            from wagtail.core import hooks
+        editor_hooks = hooks.get_hooks('insert_editor_js')
+        global_hooks = hooks.get_hooks('insert_global_admin_js')
+        self.assertIn(wagtailmodelchoosers_admin_js, editor_hooks)
+        self.assertIn(wagtailmodelchoosers_admin_js, global_hooks)
