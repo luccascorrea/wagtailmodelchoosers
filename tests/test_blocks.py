@@ -74,7 +74,12 @@ class TestModelChooserBlock(TestCase):
             except ImportError:
                 from wagtail.core.blocks import BlockWidget
             empty_form_html = BlockWidget(block).render('page', None)
-            self.assertIn('data-value="null"', empty_form_html)
+            expected_empty = [
+                'data-value="null"',
+                'data-w-block-arguments-value="[null,null]"',
+                'data-w-block-arguments-value="[null, null]"',
+            ]
+            self.assertTrue(any(val in empty_form_html for val in expected_empty))
             self.assertIn('initModelChooser(', empty_form_html)
 
         test_page = self.child_page
@@ -92,6 +97,10 @@ class TestModelChooserBlock(TestCase):
             expected_values = [
                 'data-value="&quot;%d&quot;"' % test_page.id,
                 'data-value="%d"' % test_page.id,
+                'data-w-block-arguments-value="[&quot;%d&quot;,null]"' % test_page.id,
+                'data-w-block-arguments-value="[%d,null]"' % test_page.id,
+                'data-w-block-arguments-value="[&quot;%d&quot;, null]"' % test_page.id,
+                'data-w-block-arguments-value="[%d, null]"' % test_page.id,
             ]
             self.assertTrue(any(val in test_form_html for val in expected_values))
             self.assertIn("pick a page, any page", test_form_html)
@@ -102,7 +111,18 @@ class TestModelChooserBlock(TestCase):
 
         value = block.to_python(test_page.pk)
         self.assertEqual(isinstance(value, Page), isinstance(test_page, Page))
+        # Direct model instance input
+        self.assertEqual(block.to_python(test_page), test_page)
         self.assertEqual(block.to_python(None), None)
+
+    def test_normalize(self):
+        block = blocks.ModelChooserBlock('core_page')
+        test_page = self.child_page
+
+        self.assertEqual(block.normalize(test_page), test_page)
+        self.assertEqual(block.normalize(test_page.pk).pk, test_page.pk)
+        self.assertIsInstance(block.normalize(test_page.pk), Page)
+        self.assertIsNone(block.normalize(None))
 
     def test_get_prep_value(self):
         block = blocks.ModelChooserBlock('core_page')
@@ -163,6 +183,12 @@ class TestRemoteModelChooserBlock(TestCase):
         self.assertEqual(block.to_python(None), {})
         self.assertEqual(block.to_python({'id': 1, 'name': 'foo'}), {'id': 1, 'name': 'foo'})
         self.assertEqual(block.to_python('{"id": 1, "name": "foo"}'), {'id': 1, 'name': 'foo'})
+
+    def test_normalize(self):
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        self.assertEqual(block.normalize({'id': 1, 'name': 'foo'}), {'id': 1, 'name': 'foo'})
+        self.assertEqual(block.normalize('{"id": 1, "name": "foo"}'), {'id': 1, 'name': 'foo'})
+        self.assertEqual(block.normalize(None), {})
 
     def test_bulk_to_python(self):
         block = blocks.RemoteModelChooserBlock('remote_test')

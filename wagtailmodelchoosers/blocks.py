@@ -73,10 +73,18 @@ class ModelChooserBlock(ChooserBlock):
         if not value:
             return None
 
+        if isinstance(value, self.target_model):
+            return value
+
         try:
             return self.target_model.objects.get(pk=value)
-        except self.target_model.DoesNotExist:
+        except (self.target_model.DoesNotExist, ValueError, TypeError):
             return None
+
+    def normalize(self, value):
+        if isinstance(value, self.target_model):
+            return value
+        return self.to_python(value)
 
     def bulk_to_python(self, values):
         return [self.to_python(value) for value in values]
@@ -168,6 +176,9 @@ class RemoteModelChooserBlock(ChooserBlock):
 
         else:
             return json.loads(value)
+
+    def normalize(self, value):
+        return self.to_python(value)
 
     def bulk_to_python(self, values):
         return [self.to_python(value) for value in values]

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Official verification and support for **Wagtail 6.1.3** (and Wagtail 6.1.x series).
+- Implemented `normalize(self, value)` method and enhanced `to_python()` on `ModelChooserBlock` and `RemoteModelChooserBlock` in `wagtailmodelchoosers/blocks.py` supporting Wagtail 6.1's StreamField normalization mechanism (`Block.normalize`) and direct model instance assignments.
+- Updated `BlockWidget` render assertions in `tests/test_blocks.py` to support Wagtail 6.1's Stimulus `w-block` controller attributes (`data-w-block-arguments-value`) while maintaining backward compatibility with Wagtail <=6.0 (`data-value`).
+- Added `wt61` test environments to `tox.ini` covering Python 3.10–3.12 with Django 4.2 and Django 5.0.
+- Expanded automated test suite to **121 tests** (100% pass rate) with test cases covering block normalization across model instances, primary keys, and remote dictionary data.
 - Official verification and support for **Wagtail 6.0.6** (and Wagtail 6.0.x series).
 - Updated `install_requires` in `setup.py` to `wagtail>=2.0,<7.0` and added `Framework :: Wagtail :: 6` classifier.
 - Introduced `BaseWidgetWithScript` compatibility shim in `wagtailmodelchoosers/widgets.py` replacing direct import of `wagtail.utils.widgets.WidgetWithScript` to eliminate `RemovedInWagtail70Warning` and future-proof against Wagtail 7.0 removals.
