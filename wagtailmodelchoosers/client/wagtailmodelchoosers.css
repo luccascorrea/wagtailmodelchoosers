@@ -115,6 +115,13 @@
     background-color: var(--w-color-secondary, #43b1b0);
 }
 
+.w-contrast-more .admin-modal__filters li.selected a,
+@media (prefers-contrast: more) {
+    .admin-modal__filters li.selected a {
+        outline: 2px solid var(--w-color-text-context, currentColor);
+    }
+}
+
 .admin-modal__dialog {
     position: relative;
     display: flex;
@@ -126,8 +133,15 @@
     border-radius: 3px;
     overflow: hidden;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    border: 1px solid var(--w-color-border-furniture, #ccc);
     animation: dialogIn .35s cubic-bezier(0.075, 0.82, 0.165, 1) .2s backwards;
     height: 65%;
+}
+
+@media (forced-colors: active) {
+    .admin-modal__dialog {
+        border: 2px solid CanvasText;
+    }
 }
 
 @media only screen and (min-width: 50rem) {

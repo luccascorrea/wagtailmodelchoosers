@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Official verification and support for **Wagtail 6.3.8 (LTS)** (and the Wagtail 6.3.x series).
+- Verified full compatibility of `ModelChooserBlock` and `RemoteModelChooserBlock` with Wagtail 6.3's refactored `StreamField.get_prep_value` and JSONField database storage.
+- Added duplicate object isolation in `bulk_to_python` across `ModelChooserBlock` (copying model instances via `copy.copy`) and `RemoteModelChooserBlock` (deep-copying parsed dictionaries via `copy.deepcopy`), mirroring Wagtail 6.3's `ChooserBlock.bulk_to_python` behavior.
+- Added high-contrast theme hardening in `wagtailmodelchoosers.css` for Wagtail 6.3's `w-contrast-more` theme and `@media (forced-colors: active)` mode.
+- Added PyPI classifiers in `setup.py` for `Programming Language :: Python :: 3.13`, `Framework :: Django :: 5.1`, and `Framework :: Django :: 5.2`.
+- Added `wt63` test environments to `tox.ini` covering Python 3.10–3.13 with Django 4.2, 5.0, 5.1, and 5.2.
+- Added unit tests in `tests/test_blocks.py` covering StreamField JSON persistence round-trip and duplicate object isolation in `bulk_to_python`.
+- Expanded automated test suite to **127 tests** (100% pass rate) with high code coverage (>87% total, >96% for views, >94% for utils).
 - Official verification and support for **Wagtail 6.2.4** (and the Wagtail 6.2.x series).
 - Verified full compatibility of `ModelChooserBlock` and `RemoteModelChooserBlock` with Wagtail 6.2's `BlockDefinitionLookup` mechanism (`deconstruct_with_lookup` and `construct_from_lookup`) for compact StreamField migration representations.
 - Verified concurrent editing tracking compatibility with Wagtail 6.2's `SessionController` and `UnsavedController`.

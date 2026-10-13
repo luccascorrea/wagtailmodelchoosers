@@ -1,5 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
+import json
+
 from django import forms
 from django.test import TestCase, override_settings
 
@@ -195,6 +197,22 @@ class TestModelChooserBlock(TestCase):
         self.assertEqual(restored.chooser, 'core_page')
         self.assertEqual(restored.target_model, Page)
 
+    def test_bulk_to_python_duplicate_isolation(self):
+        """Verify bulk_to_python creates distinct object copies for duplicate model IDs"""
+        block = blocks.ModelChooserBlock('core_page')
+        instances = block.bulk_to_python([self.child_page.pk, self.child_page.pk])
+        self.assertEqual(len(instances), 2)
+        self.assertEqual(instances[0].pk, self.child_page.pk)
+        self.assertEqual(instances[1].pk, self.child_page.pk)
+        self.assertIsNot(instances[0], instances[1])
+
+        # Even when passed existing instances directly, duplicate instances are duplicated
+        instances_from_obj = block.bulk_to_python([self.child_page, self.child_page])
+        self.assertEqual(len(instances_from_obj), 2)
+        self.assertEqual(instances_from_obj[0].pk, self.child_page.pk)
+        self.assertEqual(instances_from_obj[1].pk, self.child_page.pk)
+        self.assertIsNot(instances_from_obj[0], instances_from_obj[1])
+
 
 @override_settings(MODEL_CHOOSERS_OPTIONS=TEST_MODEL_CHOOSERS_OPTIONS)
 class TestRemoteModelChooserBlock(TestCase):
@@ -280,6 +298,20 @@ class TestRemoteModelChooserBlock(TestCase):
         self.assertIsInstance(restored, blocks.RemoteModelChooserBlock)
         self.assertEqual(restored.chooser, 'remote_test')
 
+    def test_bulk_to_python_duplicate_isolation(self):
+        """Verify bulk_to_python creates distinct, deep-copied dictionary instances for duplicate values"""
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        raw_data = json.dumps({'id': 101, 'name': 'Item A'})
+        instances = block.bulk_to_python([raw_data, raw_data])
+        self.assertEqual(len(instances), 2)
+        self.assertEqual(instances[0]['name'], 'Item A')
+        self.assertEqual(instances[1]['name'], 'Item A')
+        self.assertIsNot(instances[0], instances[1])
+
+        # Mutating one dictionary does not mutate the other
+        instances[0]['name'] = 'Item Modified'
+        self.assertEqual(instances[1]['name'], 'Item A')
+
 
 @override_settings(MODEL_CHOOSERS_OPTIONS=TEST_MODEL_CHOOSERS_OPTIONS)
 class TestStreamFieldReferenceExtraction(TestCase):
@@ -346,3 +378,44 @@ class TestStreamFieldReferenceExtraction(TestCase):
         self.assertIn('remote', child_blocks)
         self.assertIsInstance(child_blocks['model'], blocks.ModelChooserBlock)
         self.assertIsInstance(child_blocks['remote'], blocks.RemoteModelChooserBlock)
+
+    def test_streamfield_jsonfield_roundtrip_wagtail63(self):
+        """Verify StreamField get_prep_value, value_to_string, and from_db_value in Wagtail 6.3+"""
+        try:
+            from wagtail.fields import StreamField
+        except ImportError:
+            return
+
+        sb = StreamBlock([
+            ('model', blocks.ModelChooserBlock('core_page')),
+            ('remote', blocks.RemoteModelChooserBlock('remote_test')),
+        ])
+        field = StreamField(sb, use_json_field=True)
+        field.set_attributes_from_name('body')
+
+        val = sb.to_python([
+            {'type': 'model', 'value': self.child_page.pk},
+            {'type': 'remote', 'value': {'id': 99, 'name': 'Widget Acme'}},
+        ])
+
+        # In Wagtail 6.3, get_prep_value returns a native python list/dict
+        prep = field.get_prep_value(val)
+        self.assertIsInstance(prep, (list, str))
+        if isinstance(prep, list):
+            self.assertEqual(prep[0]['value'], self.child_page.pk)
+            self.assertEqual(prep[1]['value'], {'id': 99, 'name': 'Widget Acme'})
+
+        # value_to_string (used by revisions & modelcluster) produces valid JSON string
+        dummy = type('Dummy', (), {'body': val, '_state': type('State', (), {'adding': False})()})()
+        dumped = field.value_to_string(dummy)
+        self.assertIsInstance(dumped, str)
+        parsed = json.loads(dumped)
+        self.assertEqual(parsed[0]['value'], self.child_page.pk)
+        self.assertEqual(parsed[1]['value'], {'id': 99, 'name': 'Widget Acme'})
+
+        # from_db_value deserializes back into StreamValue with native model/dict objects
+        json_repr = json.dumps(prep) if isinstance(prep, list) else prep
+        from_db = field.from_db_value(json_repr, None, None)
+        self.assertEqual(from_db[0].value.pk, self.child_page.pk)
+        self.assertIsInstance(from_db[0].value, Page)
+        self.assertEqual(from_db[1].value, {'id': 99, 'name': 'Widget Acme'})
