@@ -171,6 +171,30 @@ class TestModelChooserBlock(TestCase):
 
         self.assertEqual(block_default.get_searchable_content(None), [])
 
+    def test_deconstruct_with_lookup(self):
+        try:
+            from wagtail.blocks.definition_lookup import (
+                BlockDefinitionLookup,
+                BlockDefinitionLookupBuilder,
+            )
+        except ImportError:
+            return  # Wagtail < 6.2
+
+        block = blocks.ModelChooserBlock('core_page')
+        builder = BlockDefinitionLookupBuilder()
+        idx = builder.add_block(block)
+        self.assertEqual(idx, 0)
+        self.assertEqual(
+            builder.blocks[0],
+            ('wagtailmodelchoosers.blocks.ModelChooserBlock', ('core_page',), {})
+        )
+
+        lookup = BlockDefinitionLookup(builder.blocks)
+        restored = lookup.get_block(idx)
+        self.assertIsInstance(restored, blocks.ModelChooserBlock)
+        self.assertEqual(restored.chooser, 'core_page')
+        self.assertEqual(restored.target_model, Page)
+
 
 @override_settings(MODEL_CHOOSERS_OPTIONS=TEST_MODEL_CHOOSERS_OPTIONS)
 class TestRemoteModelChooserBlock(TestCase):
@@ -233,6 +257,29 @@ class TestRemoteModelChooserBlock(TestCase):
         self.assertEqual(block_no_index.get_searchable_content({'name': 'Remote Value'}), [])
         self.assertEqual(block_default.get_searchable_content(None), [])
 
+    def test_deconstruct_with_lookup(self):
+        try:
+            from wagtail.blocks.definition_lookup import (
+                BlockDefinitionLookup,
+                BlockDefinitionLookupBuilder,
+            )
+        except ImportError:
+            return  # Wagtail < 6.2 does not support BlockDefinitionLookup
+
+        block = blocks.RemoteModelChooserBlock('remote_test')
+        builder = BlockDefinitionLookupBuilder()
+        idx = builder.add_block(block)
+        self.assertEqual(idx, 0)
+        self.assertEqual(
+            builder.blocks[0],
+            ('wagtailmodelchoosers.blocks.RemoteModelChooserBlock', ('remote_test',), {})
+        )
+
+        lookup = BlockDefinitionLookup(builder.blocks)
+        restored = lookup.get_block(idx)
+        self.assertIsInstance(restored, blocks.RemoteModelChooserBlock)
+        self.assertEqual(restored.chooser, 'remote_test')
+
 
 @override_settings(MODEL_CHOOSERS_OPTIONS=TEST_MODEL_CHOOSERS_OPTIONS)
 class TestStreamFieldReferenceExtraction(TestCase):
@@ -277,3 +324,25 @@ class TestStreamFieldReferenceExtraction(TestCase):
         if ReferenceIndex is not None:
             refs = list(ReferenceIndex._extract_references_from_object(self.child_page))
             self.assertIsInstance(refs, list)
+
+    def test_streamfield_block_definition_lookup_roundtrip(self):
+        try:
+            from wagtail.blocks.definition_lookup import BlockDefinitionLookup
+            from wagtail.fields import StreamField
+        except ImportError:
+            return  # Wagtail < 6.2
+
+        sb = StreamBlock([
+            ('model', blocks.ModelChooserBlock('core_page')),
+            ('remote', blocks.RemoteModelChooserBlock('remote_test')),
+        ])
+        field = StreamField(sb, use_json_field=True)
+        _, _, args, kwargs = field.deconstruct()
+        self.assertIn('block_lookup', kwargs)
+
+        reconstructed_field = StreamField(*args, **kwargs)
+        child_blocks = reconstructed_field.stream_block.child_blocks
+        self.assertIn('model', child_blocks)
+        self.assertIn('remote', child_blocks)
+        self.assertIsInstance(child_blocks['model'], blocks.ModelChooserBlock)
+        self.assertIsInstance(child_blocks['remote'], blocks.RemoteModelChooserBlock)

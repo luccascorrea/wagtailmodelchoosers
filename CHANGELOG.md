@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Official verification and support for **Wagtail 6.2.4** (and the Wagtail 6.2.x series).
+- Verified full compatibility of `ModelChooserBlock` and `RemoteModelChooserBlock` with Wagtail 6.2's `BlockDefinitionLookup` mechanism (`deconstruct_with_lookup` and `construct_from_lookup`) for compact StreamField migration representations.
+- Verified concurrent editing tracking compatibility with Wagtail 6.2's `SessionController` and `UnsavedController`.
+- Added unit tests in `tests/test_blocks.py` covering `BlockDefinitionLookupBuilder` round-trip deconstruction and `StreamField` migration lookup restoration.
+- Added `wt62` test environments to `tox.ini` covering Python 3.10–3.12 with Django 4.2 and Django 5.0.
+- Expanded automated test suite to **124 tests** (100% pass rate) with high code coverage (>86% total, >96% for views, >94% for utils).
 - Official verification and support for **Wagtail 6.1.3** (and Wagtail 6.1.x series).
 - Implemented `normalize(self, value)` method and enhanced `to_python()` on `ModelChooserBlock` and `RemoteModelChooserBlock` in `wagtailmodelchoosers/blocks.py` supporting Wagtail 6.1's StreamField normalization mechanism (`Block.normalize`) and direct model instance assignments.
 - Updated `BlockWidget` render assertions in `tests/test_blocks.py` to support Wagtail 6.1's Stimulus `w-block` controller attributes (`data-w-block-arguments-value`) while maintaining backward compatibility with Wagtail <=6.0 (`data-value`).
