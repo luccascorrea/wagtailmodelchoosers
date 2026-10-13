@@ -34,7 +34,14 @@ class ModelChooserBlock(ChooserBlock):
         self.translations = options.pop('translations', [])
         self.search_index = options.pop('search_index', kwargs.get('search_index', True))
 
-        super(ModelChooserBlock, self).__init__(**kwargs)
+        # Filter out model-only or panel-only options that are not valid block meta attributes
+        for non_block_key in ('queryset_manager_method', 'thumbnail', 'can_edit'):
+            options.pop(non_block_key, None)
+
+        block_kwargs = dict(options)
+        block_kwargs.update(kwargs)
+
+        super(ModelChooserBlock, self).__init__(**block_kwargs)
 
     @cached_property
     def target_model(self):
@@ -150,7 +157,15 @@ class RemoteModelChooserBlock(ChooserBlock):
         self.translations = options.pop('translations', [])
         self.search_index = options.pop('search_index', kwargs.get('search_index', True))
 
-        super(RemoteModelChooserBlock, self).__init__(**options)
+        # Filter out remote endpoint and other non-block keys
+        for non_block_key in ('remote_endpoint', 'remote_query_page_size_key', 'remote_query_page_key',
+                              'remote_query_search_key', 'remote_response_data_key', 'remote_response_page_key'):
+            options.pop(non_block_key, None)
+
+        block_kwargs = dict(options)
+        block_kwargs.update(kwargs)
+
+        super(RemoteModelChooserBlock, self).__init__(**block_kwargs)
 
     @cached_property
     def field(self):
