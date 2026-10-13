@@ -1,3 +1,4 @@
+import copy
 import json
 
 from django import forms
@@ -87,7 +88,18 @@ class ModelChooserBlock(ChooserBlock):
         return self.to_python(value)
 
     def bulk_to_python(self, values):
-        return [self.to_python(value) for value in values]
+        seen_ids = set()
+        result = []
+        for value in values:
+            obj = self.to_python(value)
+            if obj is not None:
+                pk = getattr(obj, 'pk', None)
+                if pk is not None and pk in seen_ids:
+                    obj = copy.copy(obj)
+                if pk is not None:
+                    seen_ids.add(pk)
+            result.append(obj)
+        return result
 
     def value_from_form(self, value):
         if not value:
@@ -181,7 +193,7 @@ class RemoteModelChooserBlock(ChooserBlock):
         return self.to_python(value)
 
     def bulk_to_python(self, values):
-        return [self.to_python(value) for value in values]
+        return [copy.deepcopy(self.to_python(value)) for value in values]
 
     def value_for_form(self, value):
         return value
