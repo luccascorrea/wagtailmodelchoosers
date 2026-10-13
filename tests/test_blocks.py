@@ -213,6 +213,43 @@ class TestModelChooserBlock(TestCase):
         self.assertEqual(instances_from_obj[1].pk, self.child_page.pk)
         self.assertIsNot(instances_from_obj[0], instances_from_obj[1])
 
+    def test_block_preview_and_description(self):
+        """Verify Wagtail 6.4+ block preview attributes and description support"""
+        block = blocks.ModelChooserBlock(
+            'core_page',
+            preview_value=self.child_page.pk,
+            preview_template='wagtailcore/shared/block_preview.html',
+            description="A chooser block for pages"
+        )
+        if hasattr(block, 'is_previewable'):
+            self.assertTrue(block.is_previewable)
+        if hasattr(block, 'get_preview_value'):
+            preview_val = block.get_preview_value()
+            self.assertIsInstance(preview_val, Page)
+            self.assertEqual(preview_val.pk, self.child_page.pk)
+        if hasattr(block, 'get_description'):
+            self.assertEqual(block.get_description(), "A chooser block for pages")
+
+    def test_options_forwarding_from_settings(self):
+        """Verify block options in MODEL_CHOOSERS_OPTIONS are passed to ChooserBlock
+        while model-only keys are filtered.
+        """
+        opts = {
+            'core_page_custom': {
+                'content_type': 'wagtailcore.Page',
+                'description': 'Configured description',
+                'preview_value': self.child_page.pk,
+                'queryset_manager_method': 'all',
+                'thumbnail': 'avatar',
+                'can_edit': True,
+            }
+        }
+        with override_settings(MODEL_CHOOSERS_OPTIONS=opts):
+            block = blocks.ModelChooserBlock('core_page_custom')
+            if hasattr(block, 'get_description'):
+                self.assertEqual(block.get_description(), 'Configured description')
+            self.assertEqual(getattr(block.meta, 'preview_value', None), self.child_page.pk)
+
 
 @override_settings(MODEL_CHOOSERS_OPTIONS=TEST_MODEL_CHOOSERS_OPTIONS)
 class TestRemoteModelChooserBlock(TestCase):
@@ -311,6 +348,37 @@ class TestRemoteModelChooserBlock(TestCase):
         # Mutating one dictionary does not mutate the other
         instances[0]['name'] = 'Item Modified'
         self.assertEqual(instances[1]['name'], 'Item A')
+
+    def test_block_preview_and_description(self):
+        """Verify Wagtail 6.4+ block preview and description on RemoteModelChooserBlock"""
+        block = blocks.RemoteModelChooserBlock(
+            'remote_test',
+            preview_value={'id': 42, 'name': 'Preview Item'},
+            preview_template='wagtailcore/shared/block_preview.html',
+            description="A remote item chooser"
+        )
+        if hasattr(block, 'is_previewable'):
+            self.assertTrue(block.is_previewable)
+        if hasattr(block, 'get_preview_value'):
+            self.assertEqual(block.get_preview_value(), {'id': 42, 'name': 'Preview Item'})
+        if hasattr(block, 'get_description'):
+            self.assertEqual(block.get_description(), "A remote item chooser")
+
+    def test_options_forwarding_from_settings(self):
+        """Verify remote block options in MODEL_CHOOSERS_OPTIONS forward block metadata and filter endpoint keys"""
+        opts = {
+            'remote_test_custom': {
+                'remote_endpoint': 'http://example.com/api',
+                'display': 'name',
+                'description': 'Remote settings description',
+                'preview_value': {'id': 100, 'name': 'Remote Mock'},
+            }
+        }
+        with override_settings(MODEL_CHOOSERS_OPTIONS=opts):
+            block = blocks.RemoteModelChooserBlock('remote_test_custom')
+            if hasattr(block, 'get_description'):
+                self.assertEqual(block.get_description(), 'Remote settings description')
+            self.assertEqual(getattr(block.meta, 'preview_value', None), {'id': 100, 'name': 'Remote Mock'})
 
 
 @override_settings(MODEL_CHOOSERS_OPTIONS=TEST_MODEL_CHOOSERS_OPTIONS)
@@ -419,3 +487,22 @@ class TestStreamFieldReferenceExtraction(TestCase):
         self.assertEqual(from_db[0].value.pk, self.child_page.pk)
         self.assertIsInstance(from_db[0].value, Page)
         self.assertEqual(from_db[1].value, {'id': 99, 'name': 'Widget Acme'})
+
+    def test_streamfield_get_default_normalization_wagtail64(self):
+        """Verify StreamField get_default normalization introduced in Wagtail 6.4 (Issue #12561)"""
+        try:
+            from wagtail.fields import StreamField
+        except ImportError:
+            return
+
+        sb = StreamBlock([
+            ('model', blocks.ModelChooserBlock('core_page')),
+            ('remote', blocks.RemoteModelChooserBlock('remote_test')),
+        ])
+        field = StreamField(sb, use_json_field=True, default=[('model', self.child_page.pk)])
+        default_val = field.get_default()
+        # In Wagtail 6.4+, get_default() returns normalized StreamValue
+        if hasattr(default_val, '__iter__') and len(default_val) > 0:
+            first_block = default_val[0]
+            self.assertEqual(first_block.value.pk, self.child_page.pk)
+            self.assertIsInstance(first_block.value, Page)

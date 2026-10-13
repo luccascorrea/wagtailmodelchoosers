@@ -137,6 +137,15 @@ if django.VERSION >= (4, 2):
         },
     }
 
+# Wagtail 6.4+ background tasks configuration
+# Disable transaction commit deferral in test suite so tasks run immediately within TestCase transactions
+TASKS = {
+    'default': {
+        'BACKEND': 'django_tasks.backends.immediate.ImmediateBackend',
+        'ENQUEUE_ON_COMMIT': False,
+    }
+}
+
 
 # Wagtail settings
 

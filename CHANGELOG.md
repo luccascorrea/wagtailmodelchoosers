@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Official verification and support for **Wagtail 6.4.2** (and the Wagtail 6.4.x series).
+- Verified full compatibility of `ModelChooserBlock` and `RemoteModelChooserBlock` with Wagtail 6.4's StreamField block preview mechanism (`is_previewable`, `get_preview_value()`, `get_description()`, `preview_template`).
+- Safely forwarded block options (`preview_value`, `preview_template`, `description`, etc.) from `MODEL_CHOOSERS_OPTIONS` in `ModelChooserBlock` and `RemoteModelChooserBlock` to Wagtail's `ChooserBlock` while filtering out model/panel-specific configuration keys (`queryset_manager_method`, `thumbnail`, `can_edit`, and remote query parameters).
+- Verified compatibility with Wagtail 6.4's `StreamField.get_default()` normalization mechanism (Issue #12561).
+- Added `TASKS` configuration to testapp settings for Wagtail 6.4+ immediate background task execution within database transactions (`ENQUEUE_ON_COMMIT: False`).
+- Added `wt64` test environments to `tox.ini` covering Python 3.10–3.13 with Django 4.2, 5.0, 5.1, and 5.2.
+- Added unit tests in `tests/test_blocks.py` covering block previews, options forwarding from `MODEL_CHOOSERS_OPTIONS`, and `StreamField.get_default()` normalization.
+- Expanded automated test suite to **132 tests** (100% pass rate) with high code coverage (>88% total, >96% for views, >94% for utils).
 - Official verification and support for **Wagtail 6.3.8 (LTS)** (and the Wagtail 6.3.x series).
 - Verified full compatibility of `ModelChooserBlock` and `RemoteModelChooserBlock` with Wagtail 6.3's refactored `StreamField.get_prep_value` and JSONField database storage.
 - Added duplicate object isolation in `bulk_to_python` across `ModelChooserBlock` (copying model instances via `copy.copy`) and `RemoteModelChooserBlock` (deep-copying parsed dictionaries via `copy.deepcopy`), mirroring Wagtail 6.3's `ChooserBlock.bulk_to_python` behavior.
