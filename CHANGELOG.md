@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Official verification and support for **Wagtail 7.0.10 (LTS)** (and the Wagtail 7.0.x series).
+- Updated package dependency requirements in `setup.py` to `wagtail>=2.0,<8.0` and added `Framework :: Wagtail :: 7` classifier.
+- Added full support for Wagtail 7.0's deferred validation on draft saving:
+  - Added `required_on_save` support to `ModelChooserPanel` and `RemoteModelChooserPanel` in `wagtailmodelchoosers/edit_handlers.py`.
+  - Safely forwarded `required_on_save` to Wagtail 7.0+ `FieldPanel` while maintaining backward compatibility with Wagtail 2.x–6.x base panels.
+  - Preserved `required_on_save` throughout panel cloning (`clone_kwargs()`, `clone()`, `bind_to_model()`).
+- Hardened revision comparison in `ChildModelComparison` and `InlineModelPanel`:
+  - Updated `ChildModelComparison.__init__` to accept `label="", **kwargs` and assign `self.label`.
+  - Added defensive fallback in `field_label()` when `field.verbose_name` is `None` to prevent `AttributeError`.
+  - Updated `InlineModelPanel.on_model_bound` to default `self.label` from `related_model._meta.verbose_name`.
+- Verified compatibility with Wagtail 7.0's deprecation removals, including the complete removal of `wagtail.utils.widgets.WidgetWithScript` (handled via autonomous `BaseWidgetWithScript`), `window.chooserUrls`, `_editor_js.html`, and `ModelViewSet` URL route migrations.
+- Added `wt70` test environments to `tox.ini` covering Python 3.10–3.13 with Django 4.2, 5.0, 5.1, and 5.2.
+- Expanded automated test suite to **137 tests** (100% pass rate) with high code coverage (>86% total, >96% for views, >94% for utils).
 - Official verification and support for **Wagtail 6.4.2** (and the Wagtail 6.4.x series).
 - Verified full compatibility of `ModelChooserBlock` and `RemoteModelChooserBlock` with Wagtail 6.4's StreamField block preview mechanism (`is_previewable`, `get_preview_value()`, `get_description()`, `preview_template`).
 - Safely forwarded block options (`preview_value`, `preview_template`, `description`, etc.) from `MODEL_CHOOSERS_OPTIONS` in `ModelChooserBlock` and `RemoteModelChooserBlock` to Wagtail's `ChooserBlock` while filtering out model/panel-specific configuration keys (`queryset_manager_method`, `thumbnail`, `can_edit`, and remote query parameters).

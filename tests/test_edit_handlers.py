@@ -243,6 +243,72 @@ class TestEditHandlers(TestCase):
         kwargs = panel.clone_kwargs()
         self.assertEqual(kwargs['relation_name'], 'simple_children')
 
+    def test_model_chooser_panel_required_on_save_explicit_true(self):
+        panel = ModelChooserPanel('owner', 'core_page', required_on_save=True)
+        self.assertTrue(panel.required_on_save)
+
+        if hasattr(panel, 'bind_to_model'):
+            bound_panel = panel.bind_to_model(self.model)
+        else:
+            bound_panel = panel.bind_to(model=self.model)
+
+        self.assertTrue(bound_panel.required_on_save)
+
+        if hasattr(bound_panel, 'get_form_options'):
+            opts = bound_panel.get_form_options()
+            # Wagtail 7.0+ deferred validation omits defer_required_on_fields when required_on_save=True
+            self.assertNotIn('defer_required_on_fields', opts)
+
+        cloned = panel.clone()
+        self.assertTrue(cloned.required_on_save)
+
+        if hasattr(panel, 'clone_kwargs'):
+            kwargs = panel.clone_kwargs()
+            self.assertTrue(kwargs['required_on_save'])
+
+    def test_model_chooser_panel_required_on_save_explicit_false(self):
+        panel = ModelChooserPanel('owner', 'core_page', required_on_save=False)
+        self.assertFalse(panel.required_on_save)
+
+        if hasattr(panel, 'bind_to_model'):
+            bound_panel = panel.bind_to_model(self.model)
+        else:
+            bound_panel = panel.bind_to(model=self.model)
+
+        if hasattr(bound_panel, 'get_form_options'):
+            opts = bound_panel.get_form_options()
+            if 'defer_required_on_fields' in opts:
+                self.assertIn('owner', opts['defer_required_on_fields'])
+
+    def test_remote_model_chooser_panel_required_on_save(self):
+        panel = RemoteModelChooserPanel('owner', 'remote_test', required_on_save=True)
+        self.assertTrue(panel.required_on_save)
+
+        if hasattr(panel, 'bind_to_model'):
+            bound_panel = panel.bind_to_model(self.model)
+        else:
+            bound_panel = panel.bind_to(model=self.model)
+
+        self.assertTrue(bound_panel.required_on_save)
+
+        if hasattr(bound_panel, 'get_form_options'):
+            opts = bound_panel.get_form_options()
+            self.assertNotIn('defer_required_on_fields', opts)
+
+        cloned = panel.clone()
+        self.assertTrue(cloned.required_on_save)
+
+        if hasattr(panel, 'clone_kwargs'):
+            kwargs = panel.clone_kwargs()
+            self.assertTrue(kwargs['required_on_save'])
+
+    def test_inline_model_panel_on_model_bound_sets_label(self):
+        User = get_user_model()
+        panel = InlineModelPanel('simplepage_set')
+        panel.model = User
+        panel.on_model_bound()
+        self.assertEqual(panel.label, "Simple page")
+
 
 class TestComparisons(TestCase):
     def test_model_comparison_many_to_one(self):
@@ -358,3 +424,17 @@ class TestComparisons(TestCase):
         comparison = ChildModelComparison(MockRelField(), [], user_unsaved_a, user_unsaved_b)
         self.assertEqual(comparison.val_a, [])
         self.assertEqual(comparison.val_b, [])
+
+    def test_child_model_comparison_with_label_and_none_verbose_name(self):
+        User = get_user_model()
+        user_a = User(username='user_a')
+        user_b = User(username='user_b')
+        rel = User.simplepage_set.rel
+        original_verbose_name = getattr(rel, 'verbose_name', None)
+        try:
+            rel.verbose_name = None
+            comparison = ChildModelComparison(rel, [], user_a, user_b, label="Assigned Pages")
+            self.assertEqual(comparison.label, "Assigned Pages")
+            self.assertEqual(comparison.field_label(), "Assigned Pages")
+        finally:
+            rel.verbose_name = original_verbose_name
