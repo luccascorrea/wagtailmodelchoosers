@@ -10,10 +10,12 @@ except ImportError:
         ChooserPanelParent = FieldPanel
 
 import collections
+import inspect
 import json
 
 from django.db import models
 from django.utils.html import escape
+from django.utils.text import capfirst
 from wagtail.admin import compare
 from wagtail.admin.compare import ChildRelationComparison, FieldComparison, M2MFieldComparison
 from wagtail.utils.decorators import cached_classmethod
@@ -64,13 +66,16 @@ class InlineModelPanel(InlinePanel):
             related.related_name = self.relation_name + "_set"
 
         self.db_field = related
+        if not getattr(self, 'label', None) and hasattr(self.db_field, 'related_model'):
+            self.label = capfirst(self.db_field.related_model._meta.verbose_name)
 
 
 class ChildModelComparison(ChildRelationComparison):
 
-    def __init__(self, field, field_comparisons, obj_a, obj_b):
+    def __init__(self, field, field_comparisons, obj_a, obj_b, label="", **kwargs):
         self.field = field
         self.field_comparisons = field_comparisons
+        self.label = label
         accessor = field.get_accessor_name()
         try:
             self.val_a = getattr(obj_a, accessor).all() if getattr(obj_a, 'pk', 1) is not None else []
@@ -154,7 +159,7 @@ class ModelChooserPanel(ChooserPanelParent):
         panel_keys = (
             'heading', 'classname', 'help_text', 'widget',
             'disable_comments', 'permission', 'icon', 'base_form_class',
-            'read_only', 'attrs',
+            'read_only', 'attrs', 'required_on_save',
         )
         panel_options = {}
         for key in panel_keys:
@@ -163,8 +168,17 @@ class ModelChooserPanel(ChooserPanelParent):
 
         self.read_only = panel_options.get('read_only', False)
         self.attrs = panel_options.get('attrs', {})
+        self.required_on_save = panel_options.get('required_on_save', None)
 
-        super().__init__(field_name, **panel_options)
+        super_options = panel_options.copy()
+        try:
+            sig = inspect.signature(ChooserPanelParent.__init__)
+            if 'required_on_save' not in sig.parameters:
+                super_options.pop('required_on_save', None)
+        except (ValueError, TypeError):
+            super_options.pop('required_on_save', None)
+
+        super().__init__(field_name, **super_options)
 
     def target_model(self):
         return self.model._meta.get_field(self.field_name).related_model
@@ -222,6 +236,7 @@ class ModelChooserPanel(ChooserPanelParent):
             'permission': getattr(self, 'permission', None),
             'read_only': getattr(self, 'read_only', False),
             'attrs': getattr(self, 'attrs', {}),
+            'required_on_save': getattr(self, 'required_on_save', None),
         })
         return kwargs
 
@@ -237,6 +252,7 @@ class ModelChooserPanel(ChooserPanelParent):
             chooser=self.chooser,
             read_only=getattr(self, 'read_only', False),
             attrs=getattr(self, 'attrs', {}),
+            required_on_save=getattr(self, 'required_on_save', None),
         )
 
     def format_value_for_display(self, value):
@@ -310,7 +326,7 @@ class RemoteModelChooserPanel(ChooserPanelParent):
         panel_keys = (
             'heading', 'classname', 'help_text', 'widget',
             'disable_comments', 'permission', 'icon', 'base_form_class',
-            'read_only', 'attrs',
+            'read_only', 'attrs', 'required_on_save',
         )
         panel_options = {}
         for key in panel_keys:
@@ -319,8 +335,17 @@ class RemoteModelChooserPanel(ChooserPanelParent):
 
         self.read_only = panel_options.get('read_only', False)
         self.attrs = panel_options.get('attrs', {})
+        self.required_on_save = panel_options.get('required_on_save', None)
 
-        super().__init__(field_name, **panel_options)
+        super_options = panel_options.copy()
+        try:
+            sig = inspect.signature(ChooserPanelParent.__init__)
+            if 'required_on_save' not in sig.parameters:
+                super_options.pop('required_on_save', None)
+        except (ValueError, TypeError):
+            super_options.pop('required_on_save', None)
+
+        super().__init__(field_name, **super_options)
 
     def get_required(self):
         blank = self.model._meta.get_field(self.field_name).blank
@@ -370,6 +395,7 @@ class RemoteModelChooserPanel(ChooserPanelParent):
             'permission': getattr(self, 'permission', None),
             'read_only': getattr(self, 'read_only', False),
             'attrs': getattr(self, 'attrs', {}),
+            'required_on_save': getattr(self, 'required_on_save', None),
         })
         return kwargs
 
@@ -385,6 +411,7 @@ class RemoteModelChooserPanel(ChooserPanelParent):
             chooser=self.chooser,
             read_only=getattr(self, 'read_only', False),
             attrs=getattr(self, 'attrs', {}),
+            required_on_save=getattr(self, 'required_on_save', None),
         )
 
     def format_value_for_display(self, value):
