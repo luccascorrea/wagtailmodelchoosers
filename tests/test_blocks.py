@@ -506,3 +506,50 @@ class TestStreamFieldReferenceExtraction(TestCase):
             first_block = default_val[0]
             self.assertEqual(first_block.value.pk, self.child_page.pk)
             self.assertIsInstance(first_block.value, Page)
+
+    def test_wagtail71_callable_preview_value(self):
+        """Verify callable preview_value evaluation introduced in Wagtail 7.1"""
+        # ModelChooserBlock with callable preview_value returning PK
+        block_model = blocks.ModelChooserBlock(
+            'core_page',
+            preview_value=lambda: self.child_page.pk
+        )
+        self.assertEqual(block_model.get_preview_value().pk, self.child_page.pk)
+        self.assertIsInstance(block_model.get_preview_value(), Page)
+
+        # RemoteModelChooserBlock with callable preview_value returning dict
+        block_remote = blocks.RemoteModelChooserBlock(
+            'remote_test',
+            preview_value=lambda: {'id': 101, 'name': 'Dynamic Preview Item'}
+        )
+        self.assertEqual(
+            block_remote.get_preview_value(),
+            {'id': 101, 'name': 'Dynamic Preview Item'}
+        )
+
+    def test_wagtail71_callable_default(self):
+        """Verify callable default evaluation introduced in Wagtail 7.1"""
+        block_model = blocks.ModelChooserBlock(
+            'core_page',
+            default=lambda: self.child_page.pk
+        )
+        self.assertEqual(block_model.get_default().pk, self.child_page.pk)
+        self.assertIsInstance(block_model.get_default(), Page)
+
+        block_remote = blocks.RemoteModelChooserBlock(
+            'remote_test',
+            default=lambda: {'id': 202, 'name': 'Dynamic Default Item'}
+        )
+        self.assertEqual(
+            block_remote.get_default(),
+            {'id': 202, 'name': 'Dynamic Default Item'}
+        )
+
+    def test_wagtail71_form_attrs_propagation(self):
+        """Verify form_attrs meta option support on all blocks introduced in Wagtail 7.1"""
+        custom_attrs = {'data-controller': 'custom-picker', 'aria-label': 'Picker Block'}
+        block_model = blocks.ModelChooserBlock('core_page', form_attrs=custom_attrs)
+        self.assertEqual(getattr(block_model.meta, 'form_attrs', None), custom_attrs)
+
+        block_remote = blocks.RemoteModelChooserBlock('remote_test', form_attrs=custom_attrs)
+        self.assertEqual(getattr(block_remote.meta, 'form_attrs', None), custom_attrs)

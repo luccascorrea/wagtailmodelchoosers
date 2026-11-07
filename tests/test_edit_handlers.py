@@ -309,6 +309,49 @@ class TestEditHandlers(TestCase):
         panel.on_model_bound()
         self.assertEqual(panel.label, "Simple page")
 
+    def test_wagtail71_telepath_bound_panel_packing(self):
+        """Verify Telepath packing of ModelChooserPanel and RemoteModelChooserPanel in Wagtail 7.1+"""
+        try:
+            from wagtail.admin.telepath import JSContext
+        except ImportError:
+            try:
+                from wagtail.telepath import JSContext
+            except ImportError:
+                return
+
+        # Bind ModelChooserPanel to form and instance
+        panel = ModelChooserPanel('owner', 'user_chooser')
+        if hasattr(panel, 'bind_to_model'):
+            bound_panel_def = panel.bind_to_model(SimplePage)
+        else:
+            bound_panel_def = panel.bind_to(model=SimplePage)
+
+        if hasattr(bound_panel_def, 'get_bound_panel'):
+            form_class = bound_panel_def.get_form_class()
+            page = SimplePage(title='Telepath Test Page')
+            form = form_class(instance=page)
+            bound_panel = bound_panel_def.get_bound_panel(instance=page, form=form)
+
+            ctx = JSContext()
+            packed = ctx.pack(bound_panel)
+            self.assertIsNotNone(packed)
+            self.assertIn("FieldPanel", str(packed))
+
+        # Check direct widget Telepath packing
+        ctx2 = JSContext()
+        packed_widget = ctx2.pack(bound_panel_def.widget_overrides()['owner'])
+        self.assertIsNotNone(packed_widget)
+
+        remote_panel = RemoteModelChooserPanel('owner', 'remote_test')
+        if hasattr(remote_panel, 'bind_to_model'):
+            bound_remote_def = remote_panel.bind_to_model(SimplePage)
+        else:
+            bound_remote_def = remote_panel.bind_to(model=SimplePage)
+
+        ctx3 = JSContext()
+        packed_remote_widget = ctx3.pack(bound_remote_def.widget_overrides()['owner'])
+        self.assertIsNotNone(packed_remote_widget)
+
 
 class TestComparisons(TestCase):
     def test_model_comparison_many_to_one(self):
