@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Official verification and support for **Wagtail 7.2.3** (and the Wagtail 7.2.x series).
+- Verified full compatibility of `ModelChooserBlock` and `RemoteModelChooserBlock` with Wagtail 7.2's search architecture powered by `django-modelsearch` (`modelsearch>=1.1,<1.2`).
+- Verified compatibility with Wagtail 7.2 composite indexed `ReferenceIndex` on `(base_content_type, object_id)` and `(to_content_type, to_object_id)`.
+- Verified compatibility with Wagtail 7.2 nested `StructBlock` DOM ID collision prevention for blocks named `content` (`block_group-${prefix}-...`).
+- Verified compatibility with Wagtail 7.2 `FieldPanel(read_only=True)` Telepath packing and form options handling without widget crash.
+- Verified compliance with Wagtail 7.2.3 automatic HTML escaping of `django.contrib.messages` notification messages in Wagtail admin.
+- Added `wt72` test environments to `tox.ini` covering Python 3.10–3.13 with Django 4.2, 5.0, 5.1, and 5.2.
+- Added unit tests in `tests/test_blocks.py` and `tests/test_edit_handlers.py` covering nested `StructBlock` collision avoidance, composite `ReferenceIndex` extraction, and read-only panel Telepath serialization.
+- Expanded automated test suite to **144 tests** (100% pass rate) with high code coverage (>87% total, >96% for views, >94% for utils).
 - Official verification and support for **Wagtail 7.1.3** (and the Wagtail 7.1.x series).
 - Verified full compatibility of `ModelChooserBlock` and `RemoteModelChooserBlock` with Wagtail 7.1's StreamField innovations:
   - Dynamic callable `preview_value` evaluation at runtime with automatic normalization.
