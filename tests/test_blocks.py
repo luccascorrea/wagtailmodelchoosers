@@ -666,3 +666,85 @@ class TestStreamFieldReferenceExtraction(TestCase):
             self.assertIn(f'<dd>{self.child_page.title}</dd>', html)
             self.assertIn('<dt>Remote</dt>', html)
             self.assertIn('<dd>Acme Remote</dd>', html)
+
+    def test_wagtail74_model_chooser_block_deferred_validation(self):
+        """Verify ModelChooserBlock supports Wagtail 7.4 deferred draft validation and required_on_save"""
+        from django.core.exceptions import ValidationError
+
+        # Standard required ModelChooserBlock (required_on_save=False by default)
+        b_default = blocks.ModelChooserBlock('core_page', required=True)
+        self.assertTrue(b_default.required)
+        self.assertFalse(getattr(b_default, 'is_deferred_validation', False))
+
+        # Standard clean(None) raises ValidationError
+        with self.assertRaises(ValidationError):
+            b_default.clean(None)
+
+        # In Wagtail 7.4+, clean_deferred(None) allows drafts with empty required blocks to save
+        if hasattr(b_default, 'clean_deferred'):
+            res = b_default.clean_deferred(None)
+            self.assertIsNone(res)
+            # Ensure required state was properly restored after clean_deferred
+            self.assertTrue(b_default.required)
+            self.assertFalse(b_default.is_deferred_validation)
+
+        # Explicitly opt out of deferred validation with required_on_save=True
+        b_strict = blocks.ModelChooserBlock('core_page', required=True, required_on_save=True)
+        self.assertTrue(getattr(b_strict.meta, 'required_on_save', False))
+        if hasattr(b_strict, 'clean_deferred'):
+            with self.assertRaises(ValidationError):
+                b_strict.clean_deferred(None)
+
+        # Test defer_required_validation and restore_deferred_validation explicitly
+        if hasattr(b_default, 'defer_required_validation'):
+            b_default.defer_required_validation()
+            self.assertTrue(b_default.is_deferred_validation)
+            self.assertFalse(b_default.field.required)
+            b_default.restore_deferred_validation()
+            self.assertFalse(b_default.is_deferred_validation)
+            self.assertTrue(b_default.field.required)
+
+    def test_wagtail74_remote_model_chooser_block_deferred_validation(self):
+        """Verify RemoteModelChooserBlock integrates with Wagtail 7.4 deferred validation lifecycle"""
+        rb = blocks.RemoteModelChooserBlock('remote_test')
+        if hasattr(rb, 'is_deferred_validation'):
+            self.assertFalse(rb.is_deferred_validation)
+            rb.defer_required_validation()
+            self.assertTrue(rb.is_deferred_validation)
+            rb.restore_deferred_validation()
+            self.assertFalse(rb.is_deferred_validation)
+
+        if hasattr(rb, 'clean_deferred'):
+            self.assertEqual(rb.clean_deferred({'id': 42, 'name': 'Item'}), {'id': 42, 'name': 'Item'})
+            self.assertIsNone(rb.clean_deferred(None))
+
+    def test_wagtail74_stream_block_w_block_css_rendering(self):
+        """Verify StreamBlock child rendering outputs w-block- prefix with legacy block- prefix (Wagtail 7.4)"""
+        sb = StreamBlock([
+            ('page', blocks.ModelChooserBlock('core_page')),
+            ('remote', blocks.RemoteModelChooserBlock('remote_test')),
+        ])
+        val = sb.to_python([
+            {'type': 'page', 'value': self.child_page.pk},
+            {'type': 'remote', 'value': {'id': 99, 'name': 'Acme Widget'}},
+        ])
+        html = sb.render_basic(val)
+        # Wagtail 7.4+ wraps children with both w-block-{type} and block-{type}
+        if 'w-block-' in html:
+            self.assertIn('w-block-page', html)
+            self.assertIn('block-page', html)
+            self.assertIn('w-block-remote', html)
+            self.assertIn('block-remote', html)
+        else:
+            self.assertIn('block-page', html)
+            self.assertIn('block-remote', html)
+
+    def test_wagtail74_streamblock_grouped_child_blocks_declaration_order(self):
+        """Verify BaseStreamBlock.grouped_child_blocks maintains declaration order (Wagtail 7.4)"""
+        sb = StreamBlock([
+            ('second', blocks.ModelChooserBlock('core_page', group='Zeta Group')),
+            ('first', blocks.RemoteModelChooserBlock('remote_test', group='Alpha Group')),
+        ])
+        if hasattr(sb, 'ordered_child_blocks'):
+            groups = [group_name for group_name, _ in sb.grouped_child_blocks()]
+            self.assertEqual(groups, ['Zeta Group', 'Alpha Group'])

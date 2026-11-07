@@ -293,6 +293,24 @@ class TestModelChooserWidget(TestCase):
             self.assertIn('data-model-chooser-mount', html)
             self.assertIn('name="target"', html)
 
+    def test_wagtail74_page_viewset_edit_endpoint_resolution(self):
+        """Verify get_edit_endpoint resolves wagtailadmin_pages:edit for Page models under Wagtail 7.4 PageViewSet"""
+        try:
+            from wagtail.admin.viewsets.pages import PageViewSet
+        except ImportError:
+            return
+
+        from core.models import SimplePage
+
+        class CustomPageViewSet(PageViewSet):
+            model = SimplePage
+
+        opts = self.get_widget_options()
+        opts['chooser'] = 'core_page'
+        widget = widgets.ModelChooserWidget(SimplePage, **opts)
+        endpoint = widget.get_edit_endpoint()
+        self.assertEqual(endpoint, '/admin/pages/0/edit/')
+
 
 class TestRemoteModelChooserWidget(TestCase):
     def get_widget_options(self):

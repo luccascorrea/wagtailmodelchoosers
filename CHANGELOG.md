@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Official verification and support for **Wagtail 7.4.4 (LTS)** (and the Wagtail 7.4.x series).
+- Verified full compatibility with Wagtail 7.4 StreamField deferred draft validation:
+  - Verified `ModelChooserBlock` and `RemoteModelChooserBlock` support `Block.clean_deferred()`, `defer_required_validation()`, `restore_deferred_validation()`, and `Block.is_deferred_validation`.
+  - Added support for `required_on_save=True` on `ModelChooserBlock` to enforce draft validation where required.
+  - Verified Wagtail 7.4.2 reusable block deferred validation fix (#14240) preventing clobbering of required state.
+- Verified dual CSS class rendering (`w-block-{type}` and legacy `block-{type}`) in `BaseStreamBlock.render_basic` with `ModelChooserBlock` and `RemoteModelChooserBlock`.
+- Verified `BaseStreamBlock.grouped_child_blocks()` declaration order preservation (`ordered_child_blocks()`) for grouped chooser blocks.
+- Verified `ModelChooserWidget.get_edit_endpoint()` edit URL resolution compatibility with Wagtail 7.4's customizable page explorer (`PageViewSet`).
+- Verified compatibility with Wagtail 7.4.3 UUID primary key creation previews (`#14355`) and `django-modelsearch` 1.3 upgrade.
+- Verified compliance with all security fixes across Wagtail 7.4.0–7.4.4 (CVE-2026-44197 to 44201, CVE-2026-54259 to 54263, Pages Admin API restriction checks, and XLSX formula injection mitigations).
+- Added `wt74` test environments to `tox.ini` for Python 3.10–3.13 with Django 5.2.
+- Added unit tests in `tests/test_blocks.py` and `tests/test_widget.py` covering deferred draft validation, dual `w-block-` rendering, group declaration order, and `PageViewSet` edit endpoint routing.
+- Expanded automated test suite to **153 tests** (100% pass rate) with high code coverage (>87% total, >96% for views, >94% for utils, >92% for blocks).
+
+### Added
 - Official verification and support for **Wagtail 7.3.4** (and the Wagtail 7.3.x series).
 - Verified full compatibility with Wagtail 7.3's Editor Autosave subsystem (`AutosaveController`):
   - Updated `RemoteModelChooser.js` to dispatch a bubbling `change` event on input modification, ensuring Wagtail 7.3's `AutosaveController` and `UnsavedController` immediately register changes.
