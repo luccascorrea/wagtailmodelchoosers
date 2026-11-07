@@ -553,3 +553,53 @@ class TestStreamFieldReferenceExtraction(TestCase):
 
         block_remote = blocks.RemoteModelChooserBlock('remote_test', form_attrs=custom_attrs)
         self.assertEqual(getattr(block_remote.meta, 'form_attrs', None), custom_attrs)
+
+    def test_wagtail72_nested_struct_block_with_content_name(self):
+        """Verify Wagtail 7.2+ nested StructBlock ID conflict prevention with blocks named 'content'"""
+        try:
+            from wagtail.blocks import CharBlock, StructBlock
+        except ImportError:
+            try:
+                from wagtail.core.blocks import CharBlock, StructBlock
+            except ImportError:
+                return
+
+        class NestedBlock(StructBlock):
+            content = CharBlock()
+            chooser = blocks.ModelChooserBlock('core_page')
+
+        block = NestedBlock()
+        state = block.get_form_state({
+            'content': 'Test nested content',
+            'chooser': self.child_page.pk,
+        })
+        self.assertEqual(state['content'], 'Test nested content')
+        self.assertEqual(state['chooser'], self.child_page.pk)
+
+        try:
+            from wagtail.admin.telepath import JSContext
+        except ImportError:
+            try:
+                from wagtail.telepath import JSContext
+            except ImportError:
+                return
+
+        ctx = JSContext()
+        packed = ctx.pack(block)
+        self.assertEqual(packed.get('_type'), 'wagtail.blocks.StructBlock')
+        child_blocks = packed.get('_args', [[], []])[1]
+        field_names = [cb.get('_args', [''])[0] for cb in child_blocks]
+        self.assertIn('content', field_names)
+        self.assertIn('chooser', field_names)
+
+    def test_wagtail72_reference_index_compatibility(self):
+        """Verify ModelChooserBlock reference extraction with Wagtail 7.2 composite indexed ReferenceIndex"""
+        if ReferenceIndex is None:
+            return
+
+        block = blocks.ModelChooserBlock('core_page')
+        refs = list(block.extract_references(self.child_page))
+        self.assertEqual(len(refs), 1)
+        target_model, obj_id, path, label = refs[0]
+        self.assertEqual(target_model, Page)
+        self.assertEqual(obj_id, str(self.child_page.pk))

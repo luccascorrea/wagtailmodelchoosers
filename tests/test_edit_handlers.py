@@ -352,6 +352,34 @@ class TestEditHandlers(TestCase):
         packed_remote_widget = ctx3.pack(bound_remote_def.widget_overrides()['owner'])
         self.assertIsNotNone(packed_remote_widget)
 
+    def test_wagtail72_read_only_panel_telepath_serialization(self):
+        """Verify ModelChooserPanel with read_only=True serializes safely without widget crash in Wagtail 7.2+"""
+        try:
+            from wagtail.admin.telepath import JSContext
+        except ImportError:
+            try:
+                from wagtail.telepath import JSContext
+            except ImportError:
+                return
+
+        panel = ModelChooserPanel('owner', 'user_chooser', read_only=True)
+        if hasattr(panel, 'bind_to_model'):
+            bound_def = panel.bind_to_model(SimplePage)
+        else:
+            bound_def = panel.bind_to(model=SimplePage)
+
+        if hasattr(bound_def, 'get_bound_panel'):
+            form_class = bound_def.get_form_class()
+            page = SimplePage(title='Read-Only Test')
+            form = form_class(instance=page)
+            bound_panel = bound_def.get_bound_panel(instance=page, form=form)
+
+            ctx = JSContext()
+            packed = ctx.pack(bound_panel)
+            self.assertIsNotNone(packed)
+            if hasattr(bound_panel, 'js_opts'):
+                self.assertIsNone(bound_panel.js_opts().get('widget'))
+
 
 class TestComparisons(TestCase):
     def test_model_comparison_many_to_one(self):
