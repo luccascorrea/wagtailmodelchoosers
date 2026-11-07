@@ -85,8 +85,17 @@ class BaseChooser extends React.Component {
   }
 
   onEdit() {
-    const { edit_endpoint } = this.props;
-    window.open(edit_endpoint.replace("/0/", "/" + this.state.selectedId + "/"), '_blank');
+    const { edit_endpoint: editEndpoint } = this.props;
+    const { selectedId } = this.state;
+    let targetUrl = editEndpoint;
+
+    if (targetUrl.indexOf('/00000000-0000-0000-0000-000000000000/') !== -1) {
+      targetUrl = targetUrl.replace('/00000000-0000-0000-0000-000000000000/', `/${selectedId}/`);
+    } else {
+      targetUrl = targetUrl.replace('/0/', `/${selectedId}/`);
+    }
+
+    window.open(targetUrl, '_blank');
   }
 
   onClose() {

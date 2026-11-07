@@ -603,3 +603,66 @@ class TestStreamFieldReferenceExtraction(TestCase):
         target_model, obj_id, path, label = refs[0]
         self.assertEqual(target_model, Page)
         self.assertEqual(obj_id, str(self.child_page.pk))
+
+    def test_wagtail73_struct_block_form_layout_with_model_chooser(self):
+        """Verify ModelChooserBlock and RemoteModelChooserBlock inside StructBlock
+        with form_layout and BlockGroup (Wagtail 7.3).
+        """
+        try:
+            from wagtail.blocks import BlockGroup, CharBlock, StructBlock
+        except ImportError:
+            return
+
+        class LayoutBlock(StructBlock):
+            title = CharBlock()
+            page_chooser = blocks.ModelChooserBlock('core_page')
+            remote_item = blocks.RemoteModelChooserBlock('remote_test')
+
+            class Meta:
+                form_layout = BlockGroup(
+                    children=['title', 'remote_item'],
+                    settings=['page_chooser'],
+                    heading='Content Section'
+                )
+
+        block = LayoutBlock()
+        self.assertEqual(block.meta.form_layout.children, ['title', 'remote_item'])
+        self.assertEqual(block.meta.form_layout.settings, ['page_chooser'])
+        self.assertEqual(list(block.child_blocks.keys()), ['title', 'remote_item', 'page_chooser'])
+
+        # Verify Telepath packing
+        try:
+            from wagtail.admin.telepath import JSContext
+        except ImportError:
+            try:
+                from wagtail.telepath import JSContext
+            except ImportError:
+                return
+
+        ctx = JSContext()
+        packed = ctx.pack(block)
+        self.assertEqual(packed.get('_type'), 'wagtail.blocks.StructBlock')
+
+    def test_wagtail73_stream_block_comparison_htmlvalue(self):
+        """Verify StreamBlockComparison.htmlvalue produces clean <dl> markup for ModelChooserBlock (Wagtail 7.3)"""
+        try:
+            from wagtail.admin.compare import StreamBlockComparison
+        except ImportError:
+            return
+
+        sb = StreamBlock([
+            ('page', blocks.ModelChooserBlock('core_page')),
+            ('remote', blocks.RemoteModelChooserBlock('remote_test')),
+        ])
+        val = sb.to_python([
+            {'type': 'page', 'value': self.child_page.pk},
+            {'type': 'remote', 'value': {'id': 101, 'name': 'Acme Remote'}},
+        ])
+        comp = StreamBlockComparison(sb, True, True, val, val)
+        if hasattr(comp, 'htmlvalue'):
+            html = comp.htmlvalue(val)
+            self.assertIn('<dl>', html)
+            self.assertIn('<dt>Page</dt>', html)
+            self.assertIn(f'<dd>{self.child_page.title}</dd>', html)
+            self.assertIn('<dt>Remote</dt>', html)
+            self.assertIn('<dd>Acme Remote</dd>', html)

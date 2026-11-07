@@ -30,6 +30,9 @@ class RemoteModelChooser extends React.Component {
 
     // TODO: Props mutation WTF?
     input.value = newValue;
+    const ev = new Event('change', { bubbles: true });
+    ev.simulated = true;
+    input.dispatchEvent(ev);
   }
 
   render() {

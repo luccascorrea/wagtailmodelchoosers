@@ -155,54 +155,73 @@ class ModelChooserWidget(BaseWidgetWithScript, widgets.Input):
         app, class_name = self.get_class_name()
         model_name = class_name.lower()
 
+        is_uuid = False
+        if self.target_model and hasattr(self.target_model, '_meta') and hasattr(self.target_model._meta, 'pk'):
+            from django.db import models
+            is_uuid = isinstance(self.target_model._meta.pk, models.UUIDField)
+
+        dummy_pks = (
+            ['00000000-0000-0000-0000-000000000000', 0]
+            if is_uuid else
+            [0, '00000000-0000-0000-0000-000000000000']
+        )
+
         # 1. Try Wagtail 5.1+ SnippetViewSet URL name: wagtailsnippets_<app>_<model>:edit
-        try:
-            return reverse(f'wagtailsnippets_{app}_{model_name}:edit', args=[0])
-        except NoReverseMatch:
-            pass
+        for dummy in dummy_pks:
+            try:
+                return reverse(f'wagtailsnippets_{app}_{model_name}:edit', args=[dummy])
+            except NoReverseMatch:
+                pass
 
         # 2. Try generic Wagtail Snippet edit URL: wagtailsnippets:edit
-        try:
-            return reverse('wagtailsnippets:edit', args=[app, model_name, 0])
-        except NoReverseMatch:
-            pass
+        for dummy in dummy_pks:
+            try:
+                return reverse('wagtailsnippets:edit', args=[app, model_name, dummy])
+            except NoReverseMatch:
+                pass
 
-        # 3. Try Wagtail 5.2+ ModelViewSet URL names: <model_name>:edit or <app>_<model_name>:edit
-        try:
-            return reverse(f'{model_name}:edit', args=[0])
-        except NoReverseMatch:
-            pass
+        # 3. Try Wagtail 5.2+ / 7.3+ ModelViewSet URL names: <model_name>:edit or <app>_<model_name>:edit
+        for dummy in dummy_pks:
+            try:
+                return reverse(f'{model_name}:edit', args=[dummy])
+            except NoReverseMatch:
+                pass
 
-        try:
-            return reverse(f'{app}_{model_name}:edit', args=[0])
-        except NoReverseMatch:
-            pass
+            try:
+                return reverse(f'{app}_{model_name}:edit', args=[dummy])
+            except NoReverseMatch:
+                pass
 
         # 4. Try Wagtail Page edit URL if target model is a Page subclass
         if self.target_model and hasattr(self.target_model, '_meta'):
             try:
                 from wagtail.models import Page
                 if issubclass(self.target_model, Page):
-                    try:
-                        return reverse('wagtailadmin_pages:edit', args=[0])
-                    except NoReverseMatch:
-                        pass
+                    for dummy in dummy_pks:
+                        try:
+                            return reverse('wagtailadmin_pages:edit', args=[dummy])
+                        except NoReverseMatch:
+                            pass
             except ImportError:
                 try:
                     from wagtail.core.models import Page
                     if issubclass(self.target_model, Page):
-                        try:
-                            return reverse('wagtailadmin_pages:edit', args=[0])
-                        except NoReverseMatch:
-                            pass
+                        for dummy in dummy_pks:
+                            try:
+                                return reverse('wagtailadmin_pages:edit', args=[dummy])
+                            except NoReverseMatch:
+                                pass
                 except ImportError:
                     pass
 
         # 5. Fallback to legacy Wagtail ModelAdmin URL: <app>_<model>_modeladmin_edit
-        try:
-            return reverse(f'{app}_{model_name}_modeladmin_edit', kwargs={"instance_pk": 0})
-        except NoReverseMatch:
-            return None
+        for dummy in dummy_pks:
+            try:
+                return reverse(f'{app}_{model_name}_modeladmin_edit', kwargs={"instance_pk": dummy})
+            except NoReverseMatch:
+                pass
+
+        return None
 
     def get_filters_endpoint(self):
         app, class_name = self.get_class_name()

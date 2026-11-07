@@ -238,6 +238,47 @@ class TestModelChooserWidget(TestCase):
         widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
         self.assertIsNone(widget.get_edit_endpoint())
 
+    @patch('wagtailmodelchoosers.widgets.reverse')
+    def test_get_edit_endpoint_uuid_pk_path_converter(self, mock_reverse):
+        """Verify get_edit_endpoint falls back to UUID dummy PK when integer 0 raises NoReverseMatch (Wagtail 7.3)"""
+        def fake_reverse(name, args=None, kwargs=None):
+            if args and args[0] == 0:
+                raise NoReverseMatch("Converter 'uuid' failed to match '0'")
+            if args and args[0] == '00000000-0000-0000-0000-000000000000':
+                return f'/admin/snippets/core/uuidmodel/edit/{args[0]}/'
+            raise NoReverseMatch()
+
+        mock_reverse.side_effect = fake_reverse
+
+        from django.db import models
+
+        class MockUUIDModel(models.Model):
+            id = models.UUIDField(primary_key=True)
+            name = models.CharField(max_length=50)
+
+            class Meta:
+                app_label = 'core'
+
+        opts = self.get_widget_options()
+        widget = widgets.ModelChooserWidget(MockUUIDModel, **opts)
+        endpoint = widget.get_edit_endpoint()
+        self.assertEqual(endpoint, '/admin/snippets/core/uuidmodel/edit/00000000-0000-0000-0000-000000000000/')
+
+    def test_get_edit_endpoint_actual_uuid_model_structure(self):
+        """Verify get_edit_endpoint identifies UUIDField PK and builds dummy_pks appropriately"""
+        from django.db import models
+
+        class ConcreteUUIDModel(models.Model):
+            id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+            name = models.CharField(max_length=50)
+
+            class Meta:
+                app_label = 'core'
+
+        opts = self.get_widget_options()
+        widget = widgets.ModelChooserWidget(ConcreteUUIDModel, **opts)
+        self.assertTrue(isinstance(widget.target_model._meta.pk, models.UUIDField))
+
     def test_widget_use_fieldset(self):
         widget = widgets.ModelChooserWidget(Page, **self.get_widget_options())
         self.assertFalse(getattr(widget, 'use_fieldset', True))
