@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Official verification and support for **Wagtail 7.1.3** (and the Wagtail 7.1.x series).
+- Verified full compatibility of `ModelChooserBlock` and `RemoteModelChooserBlock` with Wagtail 7.1's StreamField innovations:
+  - Dynamic callable `preview_value` evaluation at runtime with automatic normalization.
+  - Dynamic callable `default` evaluation at runtime with automatic normalization.
+  - Support for `form_attrs` block attributes forwarded from block definitions/options to block adapters.
+- Verified compatibility with Wagtail 7.1's client-side panels API (`window.wagtail.editHandler`):
+  - Form panels (`ModelChooserPanel` and `RemoteModelChooserPanel`) and widgets serialize cleanly through Wagtail's Telepath adapter registry.
+  - Widget hidden input elements correctly resolve client queries via `FieldPanel.getBoundWidget()` and integrate with error handling (`getErrorMessage` / `setErrorMessage`).
+- Verified compatibility with Wagtail 7.1's bulk `ReferenceIndex` traversal (`get_references_to_in_bulk`, `usage_count_subquery`) and preview authorization hardening (CVE-2026-25517).
+- Added `wt71` test environments to `tox.ini` covering Python 3.10–3.13 with Django 4.2, 5.0, 5.1, and 5.2.
+- Added unit tests in `tests/test_blocks.py` and `tests/test_edit_handlers.py` covering callable previews, callable defaults, `form_attrs`, and Telepath bound panel packing.
+- Expanded automated test suite to **141 tests** (100% pass rate) with high code coverage (>86% total, >96% for views, >94% for utils).
 - Official verification and support for **Wagtail 7.0.10 (LTS)** (and the Wagtail 7.0.x series).
 - Updated package dependency requirements in `setup.py` to `wagtail>=2.0,<8.0` and added `Framework :: Wagtail :: 7` classifier.
 - Added full support for Wagtail 7.0's deferred validation on draft saving:
