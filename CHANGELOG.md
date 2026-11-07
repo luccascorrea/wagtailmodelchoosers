@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Official verification and support for **Wagtail 7.3.4** (and the Wagtail 7.3.x series).
+- Verified full compatibility with Wagtail 7.3's Editor Autosave subsystem (`AutosaveController`):
+  - Updated `RemoteModelChooser.js` to dispatch a bubbling `change` event on input modification, ensuring Wagtail 7.3's `AutosaveController` and `UnsavedController` immediately register changes.
+  - Verified `ModelChooser.js` native `change` event bubbling during item selection and clearing.
+- Verified full compatibility with Wagtail 7.3 `StructBlock.Meta.form_layout` and `BlockGroup`:
+  - `ModelChooserBlock` and `RemoteModelChooserBlock` function seamlessly inside primary and collapsed "settings" `BlockGroup` panels.
+  - Verified Telepath packing and child block reordering via `get_sorted_block_names()`.
+- Verified structured definition list diff rendering in Wagtail 7.3's revision comparison view (`StreamBlockComparison.htmlvalue(val)`).
+- Hardened edit endpoint URL resolution in `ModelChooserWidget.get_edit_endpoint()`:
+  - Added support for models using `UUIDField` primary keys governed by Wagtail 7.3's `ModelViewSet.pk_path_converter`.
+  - Fallback to standard dummy UUID `'00000000-0000-0000-0000-000000000000'` when integer `0` fails with `NoReverseMatch`.
+  - Updated `BaseChooser.js:onEdit()` to replace both integer `/0/` and UUID dummy placeholders.
+- Verified compatibility with Wagtail 7.3 generic model `CreateView` / `EditView` validation refactoring (`is_valid(form)`).
+- Verified compatibility with Wagtail 7.3.2 composite indexes on `PageLogEntry` and `ModelLogEntry` (migration `0097`).
+- Verified compliance with all security remediations across Wagtail 7.3.0 to 7.3.4 (CVE-2026-25517, CVE-2026-28222, CVE-2026-28223, CVE-2026-44197 to 44201, CVE-2026-54259 to 54263, and 7.3.4 Admin API checks).
+- Added `wt73` test environments to `tox.ini` covering Python 3.10–3.13 with Django 4.2, 5.0, and 5.2.
+- Added unit tests in `tests/test_blocks.py` and `tests/test_widget.py` covering `BlockGroup` `form_layout`, `StreamBlockComparison.htmlvalue`, and UUID `pk_path_converter` edit URL resolution.
+- Expanded automated test suite to **148 tests** (100% pass rate) with high code coverage (>87% total, >96% for views, >94% for utils, >90% for blocks).
+
+### Added
 - Official verification and support for **Wagtail 7.2.3** (and the Wagtail 7.2.x series).
 - Verified full compatibility of `ModelChooserBlock` and `RemoteModelChooserBlock` with Wagtail 7.2's search architecture powered by `django-modelsearch` (`modelsearch>=1.1,<1.2`).
 - Verified compatibility with Wagtail 7.2 composite indexed `ReferenceIndex` on `(base_content_type, object_id)` and `(to_content_type, to_object_id)`.
